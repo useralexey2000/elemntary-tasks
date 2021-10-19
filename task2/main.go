@@ -72,7 +72,7 @@ type Envelope struct {
 }
 
 func (e Envelope) Fit(e1 Envelope) {
-	if e.A > e1.A && e.B > e1.B {
+	if e.A > e1.A && e.B > e1.B || e.A > e1.B && e.B > e1.A {
 		fmt.Printf("envelope #1: (%v, %v) can accomodate envelope #2: (%v, %v)\n", e.A, e.B, e1.A, e1.B)
 	} else {
 		fmt.Printf("envelope #1: (%v, %v) can't accomodate envelope #2: (%v, %v)\n", e.A, e.B, e1.A, e1.B)
