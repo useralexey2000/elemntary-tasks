@@ -18,18 +18,6 @@ func main() {
 	ones["8"] = "восемь"
 	ones["9"] = "девять"
 
-	// teens := make(map[string]string)
-	// tens["0"] = "десять"
-	// tens["1"] = "одинадцать"
-	// tens["2"] = "двенадцать"
-	// tens["3"] = "тринадцать"
-	// tens["4"] = "четырнадцать"
-	// tens["5"] = "пятнадцать"
-	// tens["6"] = "шестнадцать"
-	// tens["7"] = "семнадцать"
-	// tens["8"] = "восемнадцать"
-	// tens["9"] = "девятнадцать"
-
 	tens := make(map[string]string)
 	tens["10"] = "десять"
 	tens["11"] = "одинадцать"
@@ -122,74 +110,18 @@ func main() {
 	// 	os.Exit(1)
 	// }
 
-	str := "41200"
+	str := "1001104000"
 
 	arr := partNumString(str)
+	// fmt.Println(arr)
+	arr = bar(arr, numbers)
 
-	// res := ""
-	// for i, v := range arr {
-	// 	name := string(v[len(v)-1])
-	// 	k := strings.Split(v, "")
-
-	// 	idx := len(v) - 1
-	// 	part := ""
-	// 	for j := 0; j <= len(k)-1; j++ {
-
-	// 		if k[j] == "0" {
-	// 			idx--
-	// 			continue
-	// 		}
-	// 		if len(k) == 2 && k[0] == "1" {
-	// 			part = numbers[i][strings.Join(k, "")]
-	// 			break
-	// 		}
-
-	// 		if j == 1 && k[j] == "1" {
-	// 			pp := numbers[idx][k[j]+k[j+1]]
-	// 			part = part + " " + pp
-	// 			break
-	// 		}
-
-	// 		p := numbers[idx][k[j]]
-
-	// 		idx--
-	// 		// part = part + " " + p
-	// 		part = part + " " + p
-	// 	}
-
-	// 	identifier := i + 2
-	// 	// if thousanda
-
-	// 	if i < 1 {
-	// 		if part == "" {
-	// 			res = part + res
-	// 			continue
-	// 		}
-	// 		res = part + numbers[len(arr)-1][string(part[0])] + res
-	// 		continue
-	// 	}
-	// 	if part == "" {
-	// 		res = part + res
-	// 		continue
-	// 	}
-	// 	rank := numbers[identifier][name]
-
-	// 	// s := string(part[len(part)-1])
-	// 	pt := strings.Trim(part, " ")
-	// 	if pt == numbers[0]["1"] && identifier == 3 {
-	// 		part = strings.Split(part, "|")[1]
-	// 	}
-
-	// 	if part == numbers[0]["2"] && identifier == 3 {
-	// 		part = strings.Split(part, "|")[1]
-	// 	}
-
-	// 	//add identifier of 3 pair len(arr)+1
-	// 	res = part + " " + rank + numbers[len(arr)-1][string(part[0])] + res
-	// }
-
-	// fmt.Println(res)
 	fmt.Println(arr)
+}
+
+type number struct {
+	str  string
+	rank int
 }
 
 func usage(s string) {
@@ -205,39 +137,92 @@ func partNumString(str string) []string {
 	count := 0
 	// devide by category
 	for i := len(str); i > 3; i -= 3 {
-		arr = append(arr, string(str[i-3:i]))
+		s := string(str[i-3 : i])
+		// can be leading zeros
+		s = strings.TrimLeft(s, "0")
+		if s == "" {
+			s = "0"
+		}
+		arr = append(arr, s)
 		count++
 	}
 	arr = append(arr, str[0:len(str)-count*3])
-	// fmt.Println(arr)
+	fmt.Println(arr, len(arr))
 	return arr
 }
 
-func printNumStringPart(nums map[int]map[string]string, str string, rank int) []string {
-	// var name string
+func bar(arr []string, nums map[int]map[string]string) []string {
 
-	ss := strings.Split(str, "")
-	arr := make([]string, 0)
+	sl := make([]string, 0)
+	// tmp := make([]string, 0)
+	// tmp := make([]number, 0)
 
-	idx := 2
-	for i := 0; i < len(ss); i++ {
-		if ss[i] == "0" {
-			idx--
+	for _, v := range arr {
+		// rank := i + 3
+
+		ss := strings.Split(v, "")
+
+		if len(ss) == 1 {
+			num := nums[0][ss[0]]
+			sl = append(sl, num)
 			continue
+		}
 
+		// not complex - teens
+		if len(ss) == 2 && ss[0] == "1" {
+			num := ss[0] + ss[1]
+			num = nums[1][num]
+			// num = num + " " + nums[i+1][arr[i]]
+
+			// numb := number{
+			// 	str: nums[1][n],
+			// 	rank:
+			// }
+			sl = append(sl, num)
+			continue
 		}
-		if len(ss)-i == 2 && ss[i] == "1" {
-			s := ss[i] + ss[i+1]
-			fmt.Println(s)
-			arr = append(arr, nums[1][s])
-			return arr
+
+		tmp := make([]string, 0)
+		// complex tens and hundreds
+		for j, k := 0, len(ss)-1; k >= 0; j, k = j+1, k-1 {
+			s := ss[k]
+			if s == "0" && k >= 1 {
+				continue
+			}
+
+			num := nums[j][s]
+			tmp = append(tmp, num)
 		}
-		arr = append(arr, nums[idx][ss[i]])
-		idx--
+		str := strings.Join(tmp, " ")
+		sl = append(sl, str)
 	}
-	fmt.Println(arr)
 
-	return arr
+	fmt.Println(sl)
+	res := make([]string, 0)
+	// for i := len(arr) - 1; i >= 0; i-- {
+	// 	if arr[i] == "0" {
+	// 		tmp[i] = ""
+	// 		continue
+	// 	}
+
+	// 	if len(arr[i]) == 1 {
+	// 		s := nums[i+2][arr[i]]
+	// 		res = append(res, tmp[i]+" "+s)
+	// 		continue
+	// 	}
+
+	// 	if len(arr[i]) == 2 {
+	// 		s := nums[i+1][arr[i]]
+	// 		res = append(res, tmp[i]+" "+s)
+	// 		continue
+	// 	}
+	// 	// if len(arr[i]) == 3 {
+
+	// 	// }
+	// 	res = append(res, tmp[i])
+	// }
+
+	return res
 }
 
 // 1 015
