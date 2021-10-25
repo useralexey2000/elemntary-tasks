@@ -96,7 +96,7 @@ func main() {
 	numbers[5] = millions
 	numbers[6] = billions
 
-	i := 15001110
+	i := 0
 	// i := 0
 	arr := foo(i)
 	nums := bar(arr)
@@ -207,10 +207,14 @@ func bar(arr []int) [][]num {
 		}
 
 		nums = append(nums, tmp)
-
 	}
-
-	return nums
+	// reverse order to normal
+	newnums := make([][]num, 0)
+	for i := len(nums) - 1; i >= 0; i-- {
+		newnums = append(newnums, nums[i])
+	}
+	return newnums
+	// return nums
 }
 
 func sprint(nums [][]num, m map[int]map[int]string) string {
@@ -258,15 +262,9 @@ func sprint(nums [][]num, m map[int]map[int]string) string {
 		}
 		// dont add rank for blocks < 1000. hundred block dont have additiounal rank
 		if n.rank == 0 {
-			// if i == 0 {
 			arr = append(arr, tmp)
 			continue
 		}
-
-		// // all values are same after 4 | For all values with rank > 0
-		// if n.val > 4 {
-		// 	n.val = 5
-		// }
 
 		// For all values with rank > 0
 		// all values are same after 4 for pos > 1 (10 11 20 40 100 ...thousands / hundreds ...)
@@ -278,11 +276,17 @@ func sprint(nums [][]num, m map[int]map[int]string) string {
 		tmp = append(tmp, m[n.rank+3][n.val])
 		arr = append(arr, tmp)
 	}
-	// compile from arr to string
-	str := ""
-	for i := len(arr) - 1; i >= 0; i-- {
-		s := strings.Join(arr[i], " ")
-		str = str + s + " "
+	// create string from arr
+	var sb strings.Builder
+	sep := " "
+	for i, v := range arr {
+		s := strings.Join(v, sep)
+		if i == len(arr)-1 {
+			sb.WriteString(s)
+			break
+		}
+		sb.WriteString(s)
+		sb.WriteString(sep)
 	}
-	return strings.TrimRight(str, " ")
+	return sb.String()
 }
