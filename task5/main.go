@@ -96,13 +96,14 @@ func main() {
 	numbers[5] = millions
 	numbers[6] = billions
 
-	i := 1100204002
+	i := 15001110
 	// i := 0
 	arr := foo(i)
 	nums := bar(arr)
 	fmt.Println(arr)
 	fmt.Println(nums)
-	print(nums, numbers)
+	s := sprint(nums, numbers)
+	fmt.Println(s)
 }
 
 func foo(i int) []int {
@@ -138,6 +139,17 @@ func bar(arr []int) [][]num {
 	for i, v := range arr {
 
 		tmp := make([]num, 0)
+
+		if len(arr) == 1 && v == 0 {
+			n := num{
+				val:  v,
+				pos:  0,
+				rank: i,
+			}
+			tmp = append(tmp, n)
+			nums = append(nums, tmp)
+			return nums
+		}
 
 		if v > 99 && v < 1000 {
 			val := v / 100
@@ -182,7 +194,9 @@ func bar(arr []int) [][]num {
 			continue
 		}
 
-		if v == 0 {
+		// can be omited, empty [] arr is returned then
+		//  if block is 0 add [0]
+		if len(tmp) == 0 && v == 0 {
 			n := num{
 				val:  v,
 				pos:  0,
@@ -190,33 +204,34 @@ func bar(arr []int) [][]num {
 			}
 			tmp = append(tmp, n)
 			nums = append(nums, tmp)
-			continue
 		}
+
+		nums = append(nums, tmp)
 
 	}
 
 	return nums
 }
 
-func print(nums [][]num, m map[int]map[int]string) {
+func sprint(nums [][]num, m map[int]map[int]string) string {
 
 	arr := make([][]string, 0)
 
 	for i, v := range nums {
 
-		// if one num and num == 0 print 0
+		// if num and num == 0 return 0
 		if i == 0 && len(nums) == 1 && v[0].val == 0 {
-			fmt.Println(m[0][0])
-			return
+			return m[0][0]
 		}
 
 		// if 000 ignore
 		if len(v) > 0 && v[0].val == 0 {
 			continue
 		}
-
+		// to append from a block
 		tmp := make([]string, 0)
 
+		//  n is last number in block | depending on it will be the block named
 		var n num
 		for _, k := range v {
 
@@ -229,25 +244,33 @@ func print(nums [][]num, m map[int]map[int]string) {
 			// get string coresponding to value
 			str := m[n.pos][n.val]
 
-			// if thousands and value is 1 || 2 change to female
+			// (+3 added because blocks are devided by hundreds=0, thousands=1 etc...
+			// if rank = 1(+3) thousands  and value is 1 || 2 change to second name of <name1>|<name2>
 			if n.rank+3 == 4 && n.pos == 0 && (n.val == 1 || n.val == 2) {
 				str = strings.Split(str, "|")[1]
 			}
-			// ohtherwise change to male
+			// otherwise change to first name  <name1>|<name2>
 			if n.pos == 0 && (n.val == 1 || n.val == 2) {
 				str = strings.Split(str, "|")[0]
 			}
 
 			tmp = append(tmp, str)
 		}
-		// dont add rank for blocks < 1000
-		if i == 0 {
+		// dont add rank for blocks < 1000. hundred block dont have additiounal rank
+		if n.rank == 0 {
+			// if i == 0 {
 			arr = append(arr, tmp)
 			continue
 		}
 
-		// all values are same after 4
-		if n.val > 4 {
+		// // all values are same after 4 | For all values with rank > 0
+		// if n.val > 4 {
+		// 	n.val = 5
+		// }
+
+		// For all values with rank > 0
+		// all values are same after 4 for pos > 1 (10 11 20 40 100 ...thousands / hundreds ...)
+		if n.pos >= 1 {
 			n.val = 5
 		}
 
@@ -261,5 +284,5 @@ func print(nums [][]num, m map[int]map[int]string) {
 		s := strings.Join(arr[i], " ")
 		str = str + s + " "
 	}
-	fmt.Println(strings.TrimRight(str, " "))
+	return strings.TrimRight(str, " ")
 }
