@@ -14,7 +14,8 @@ func main() {
 		usage(args[0])
 		os.Exit(0)
 
-	} else if len(args) == 3 {
+	}
+	if len(args) == 3 {
 
 		i, err := countString(args[1], args[2])
 		if err != nil {
@@ -23,8 +24,11 @@ func main() {
 		fmt.Println("Number of matches is: ", i)
 		os.Exit(0)
 
-	} else if len(args) == 4 {
-		replaceString(args[1], args[2], args[3])
+	}
+	if len(args) == 4 {
+		if err := replaceString(args[1], args[2], args[3]); err != nil {
+			fmt.Println(err)
+		}
 		os.Exit(0)
 	}
 }
@@ -52,5 +56,5 @@ func replaceString(f, s1, s2 string) error {
 }
 
 func usage(n string) {
-	fmt.Printf("usage: %v %v\n", n, "filename<string> | filename<string> old<string> new<string>")
+	fmt.Printf("usage: %v filename<string> | filename<string> old<string> new<string>\n", n)
 }
