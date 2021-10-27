@@ -5,6 +5,12 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
+)
+
+const (
+	black string = "*"
+	white string = "_"
 )
 
 func main() {
@@ -15,40 +21,41 @@ func main() {
 		os.Exit(1)
 	}
 
-	arr := checks(w, h)
-	print(arr)
+	str := chess(w, h)
+	fmt.Println(str)
+
 }
 
 func usage(n string) {
 	fmt.Printf("usage: %v %v %v\n", n, "width<int>", "height<int>")
 }
 
-func checks(w, h int) [][]string {
-	outer := make([][]string, 0)
+func chess(w, h int) string {
+	if h == 0 || w == 0 {
+		return ""
+	}
+
+	var sb strings.Builder
+
+	bl, wt := black, white
 	for i := 0; i < h; i++ {
-		var pattern string
-		if i%2 > 0 {
-			pattern = " *"
-		} else {
-			pattern = "* "
-		}
-		inner := make([]string, 0)
 		for j := 0; j < w; j++ {
-			inner = append(inner, pattern)
+			if j%2 > 0 {
+				//  always returns nil error
+				sb.WriteString(wt)
+				continue
+			}
 
+			sb.WriteString(bl)
 		}
-		outer = append(outer, inner)
+		//  dont append last blank line
+		if i+1 < h {
+			sb.WriteString("\n")
+			bl, wt = wt, bl
+		}
 	}
-	return outer
-}
 
-func print(arr [][]string) {
-	for _, o := range arr {
-		for _, i := range o {
-			fmt.Print(i)
-		}
-		fmt.Println()
-	}
+	return sb.String()
 }
 
 func readArgs() (int, int, error) {
