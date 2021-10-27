@@ -96,17 +96,17 @@ func main() {
 	numbers[5] = millions
 	numbers[6] = billions
 
-	i := 0
+	i := 32001110
 	// i := 0
-	arr := foo(i)
-	nums := bar(arr)
+	arr := hundredBlocks(i)
+	nums := numBlocks(arr)
 	fmt.Println(arr)
 	fmt.Println(nums)
-	s := sprint(nums, numbers)
+	s := sprintNum(nums, numbers)
 	fmt.Println(s)
 }
 
-func foo(i int) []int {
+func hundredBlocks(i int) []int {
 	arr := make([]int, 0)
 
 	if i == 0 {
@@ -133,7 +133,7 @@ type num struct {
 // ones   // teens   // tens      // hundreds
 // (0<i<10) (9<i<20) (19<i<100 ) (99<i<1000)
 
-func bar(arr []int) [][]num {
+func numBlocks(arr []int) [][]num {
 	nums := make([][]num, 0)
 
 	for i, v := range arr {
@@ -147,7 +147,8 @@ func bar(arr []int) [][]num {
 				rank: i,
 			}
 			tmp = append(tmp, n)
-			nums = append(nums, tmp)
+			// nums = append(nums, tmp)
+			nums = append([][]num{tmp}, nums...)
 			return nums
 		}
 
@@ -180,7 +181,8 @@ func bar(arr []int) [][]num {
 				rank: i,
 			}
 			tmp = append(tmp, n)
-			nums = append(nums, tmp)
+			// nums = append(nums, tmp)
+			nums = append([][]num{tmp}, nums...)
 			continue
 		}
 		if v > 0 && v < 10 {
@@ -190,7 +192,8 @@ func bar(arr []int) [][]num {
 				rank: i,
 			}
 			tmp = append(tmp, n)
-			nums = append(nums, tmp)
+			// nums = append(nums, tmp)
+			nums = append([][]num{tmp}, nums...)
 			continue
 		}
 
@@ -203,43 +206,45 @@ func bar(arr []int) [][]num {
 				rank: i,
 			}
 			tmp = append(tmp, n)
-			nums = append(nums, tmp)
+			// nums = append(nums, tmp)
+			nums = append([][]num{tmp}, nums...)
 		}
 
-		nums = append(nums, tmp)
+		// nums = append(nums, tmp)
+		nums = append([][]num{tmp}, nums...)
+
 	}
 	// reverse order to normal
-	newnums := make([][]num, 0)
-	for i := len(nums) - 1; i >= 0; i-- {
-		newnums = append(newnums, nums[i])
-	}
-	return newnums
-	// return nums
+	// newnums := make([][]num, 0)
+	// for i := len(nums) - 1; i >= 0; i-- {
+	// 	newnums = append(newnums, nums[i])
+	// }
+	// return newnums
+	return nums
 }
 
-func sprint(nums [][]num, m map[int]map[int]string) string {
+func sprintNum(nums [][]num, m map[int]map[int]string) string {
 
 	arr := make([][]string, 0)
 
-	for i, v := range nums {
+	for _, v := range nums {
 
-		// if num and num == 0 return 0
-		if i == 0 && len(nums) == 1 && v[0].val == 0 {
+		// if length = 0 and num == 0 return 0
+		if len(nums) == 1 && v[0].val == 0 {
 			return m[0][0]
 		}
 
-		// if 000 ignore
+		// if 000 block ignore
 		if len(v) > 0 && v[0].val == 0 {
 			continue
 		}
-		// to append from a block
+		// to append to a block with several nums
 		tmp := make([]string, 0)
 
 		//  n is last number in block | depending on it will be the block named
 		var n num
-		for _, k := range v {
+		for _, n = range v {
 
-			n = k
 			// if 0 is present in a block ignore
 			if n.val == 0 {
 				continue
@@ -248,7 +253,7 @@ func sprint(nums [][]num, m map[int]map[int]string) string {
 			// get string coresponding to value
 			str := m[n.pos][n.val]
 
-			// (+3 added because blocks are devided by hundreds=0, thousands=1 etc...
+			// (+3 added because blocks are devided by hundreds=0, thousands=1 etc...(first 3 omited)
 			// if rank = 1(+3) thousands  and value is 1 || 2 change to second name of <name1>|<name2>
 			if n.rank+3 == 4 && n.pos == 0 && (n.val == 1 || n.val == 2) {
 				str = strings.Split(str, "|")[1]
@@ -277,6 +282,10 @@ func sprint(nums [][]num, m map[int]map[int]string) string {
 		arr = append(arr, tmp)
 	}
 	// create string from arr
+	return blocksToString(arr)
+}
+
+func blocksToString(arr [][]string) string {
 	var sb strings.Builder
 	sep := " "
 	for i, v := range arr {
