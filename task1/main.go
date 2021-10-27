@@ -13,8 +13,11 @@ const (
 	white string = "_"
 )
 
+var wrongArgsNumber = errors.New("Arguments are != 3")
+
 func main() {
-	w, h, err := readArgs()
+
+	w, h, err := readArgs(os.Args)
 	if err != nil {
 		fmt.Println(err)
 		usage(os.Args[0])
@@ -27,7 +30,7 @@ func main() {
 }
 
 func usage(n string) {
-	fmt.Printf("usage: %v %v %v\n", n, "width<int>", "height<int>")
+	fmt.Printf("usage: width<int> height<int> %v\n", n)
 }
 
 func chess(w, h int) string {
@@ -58,10 +61,10 @@ func chess(w, h int) string {
 	return sb.String()
 }
 
-func readArgs() (int, int, error) {
-	args := os.Args
-	if len(args) < 3 {
-		return 0, 0, errors.New("Arguments are < 3")
+func readArgs(args []string) (int, int, error) {
+
+	if len(args) != 3 {
+		return 0, 0, wrongArgsNumber
 	}
 
 	w, err := strconv.Atoi(args[1])
