@@ -14,37 +14,29 @@ func main() {
 
 	for {
 		var a, b, c, d float64
-
-		fmt.Println("please enter envelope #1 side a<int>")
-		scanner.Scan()
-		str := scanner.Text()
 		var err error
-		if a, err = strconv.ParseFloat(str, 64); err != nil {
-			fmt.Println("can`t read argument", err)
+
+		fmt.Println("please enter envelope #1 side a<float>")
+		if a, err = readArgs(scanner); err != nil {
+			fmt.Println(err)
 			continue
 		}
 
-		fmt.Println("please enter envelope #1 side b<int>")
-		scanner.Scan()
-		str = scanner.Text()
-		if b, err = strconv.ParseFloat(str, 64); err != nil {
-			fmt.Println("can`t read argument", err)
+		fmt.Println("please enter envelope #1 side b<float>")
+		if b, err = readArgs(scanner); err != nil {
+			fmt.Println(err)
 			continue
 		}
 
-		fmt.Println("please enter envelope #2 side a<int>")
-		scanner.Scan()
-		str = scanner.Text()
-		if c, err = strconv.ParseFloat(str, 64); err != nil {
-			fmt.Println("can`t read argument", err)
+		fmt.Println("please enter envelope #2 side a<float>")
+		if c, err = readArgs(scanner); err != nil {
+			fmt.Println(err)
 			continue
 		}
 
-		fmt.Println("please enter envelope #2 side b<int>")
-		scanner.Scan()
-		str = scanner.Text()
-		if d, err = strconv.ParseFloat(str, 64); err != nil {
-			fmt.Println("can`t read argument", err)
+		fmt.Println("please enter envelope #2 side b<float>")
+		if d, err = readArgs(scanner); err != nil {
+			fmt.Println(err)
 			continue
 		}
 
@@ -58,7 +50,7 @@ func main() {
 			fmt.Println("can`t read argument", err)
 			os.Exit(1)
 		}
-		s = strings.ToLower(strings.Trim(s, ""))
+		s = strings.ToLower(strings.Trim(s, " "))
 		if s == "yes" || s == "y" {
 			continue
 		}
@@ -71,10 +63,30 @@ type Envelope struct {
 	B float64
 }
 
-func (e Envelope) Fit(e1 Envelope) {
+func (e Envelope) Fit(e1 Envelope) bool {
 	if e.A > e1.A && e.B > e1.B || e.A > e1.B && e.B > e1.A {
-		fmt.Printf("envelope #1: (%v, %v) can accomodate envelope #2: (%v, %v)\n", e.A, e.B, e1.A, e1.B)
-	} else {
-		fmt.Printf("envelope #1: (%v, %v) can't accomodate envelope #2: (%v, %v)\n", e.A, e.B, e1.A, e1.B)
+		return true
 	}
+	return false
+}
+
+func print(e, e1 Envelope, b bool) {
+	if b {
+		fmt.Printf("envelope #1: (%v, %v) can accomodate envelope #2: (%v, %v)\n", e.A, e.B, e1.A, e1.B)
+		return
+	}
+	fmt.Printf("envelope #1: (%v, %v) can't accomodate envelope #2: (%v, %v)\n", e.A, e.B, e1.A, e1.B)
+}
+
+func readArgs(scanner *bufio.Scanner) (float64, error) {
+
+	scanner.Scan()
+	str := scanner.Text()
+
+	side, err := strconv.ParseFloat(str, 64)
+
+	if err != nil {
+		return 0, fmt.Errorf("can`t read argument %v", err)
+	}
+	return side, nil
 }
