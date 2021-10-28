@@ -14,98 +14,112 @@ const (
 	piter  = "Piter"
 )
 
+var numLengthErr = errors.New("wrong length of num, must  be 6")
+var argLenghtErr = errors.New("wrong length of args, must  be > 2")
+
 func main() {
-	min, max, file, err := readArgs()
+	file, nums, err := readArgs(os.Args)
+	// file, nums, err := readArgs([]string{"main", "fname", "101110"})
 	if err != nil {
 		fmt.Println(err)
 		usage(os.Args[0])
 		os.Exit(1)
 	}
-	var a algo
-	a, err = getAlgo(file)
 
-	countLuckyNum(min, max, a)
+	a, err := getAlgo(file)
 
-}
-
-type algo func(int, int) int
-
-func countLuckyNum(min, max int, a algo) {
-	res := a(min, max)
-	fmt.Println(res)
-}
-
-func piterAlgo(min, max int) int {
-	var counter int
-
-	for i := min; i <= max; i++ {
-		bt := strconv.Itoa(i)
-
-		right := (bt[0] ^ 48) + (bt[1] ^ 48) + (bt[2] ^ 48)
-		left := (bt[3] ^ 48) + (bt[4] ^ 48) + (bt[5] ^ 48)
-
-		if right == left {
-			counter++
-		}
-
+	res, err := countLuckyNum(nums, a)
+	if err != nil {
+		fmt.Println(err)
+		usage(os.Args[0])
+		os.Exit(1)
 	}
-	return counter
+
+	fmt.Println("Number of lucky numbers :", res)
+
 }
 
-func moscowAlgo(min, max int) int {
+type algo func([]int) (bool, error)
+
+func countLuckyNum(nums [][]int, a algo) (int, error) {
 	var counter int
-	var even byte
-	var odd byte
 
-	for i := min; i <= max; i++ {
-		bt := strconv.Itoa(i)
-
-		for j := 0; j < len(bt); j++ {
-			if bt[j]&1 == 1 {
-				odd += (bt[j] ^ 48)
-			} else {
-				even += (bt[j] ^ 48)
-			}
+	for _, v := range nums {
+		b, err := a(v)
+		if err != nil {
+			return 0, err
 		}
-
-		if even == odd {
+		if b {
 			counter++
 		}
 	}
-	return counter
+
+	return counter, nil
 }
 
-func readArgs() (int, int, string, error) {
-	var (
-		min      int
-		max      int
-		filename string
-	)
+func piterAlgo(num []int) (bool, error) {
+	if len(num) != 6 {
+		return false, numLengthErr
+	}
 
-	args := os.Args
+	right := num[0] + num[1] + num[2]
+	left := num[3] + num[4] + num[5]
+
+	return left == right, nil
+}
+
+func moscowAlgo(num []int) (bool, error) {
+	if len(num) != 6 {
+		return false, numLengthErr
+	}
+
+	even, odd := 0, 0
+
+	for _, v := range num {
+		if v%2 == 0 {
+			even++
+			continue
+		}
+		odd++
+	}
+
+	return even == odd, nil
+}
+
+func readArgs(args []string) (string, [][]int, error) {
+	// at least one number should be specified
 	if len(args) < 3 {
-		return 0, 0, "", errors.New("Not enough args")
-	}
-	var err error
-	if _, err = fmt.Scanf("%s", &filename); err != nil {
-		return 0, 0, "", err
+		return "", nil, argLenghtErr
 	}
 
-	if _, err = fmt.Scanf("%d", &min); err != nil {
-		return 0, 0, "", err
+	fname := args[1]
+	strNums := args[2:]
+
+	nums := make([][]int, 0)
+	num := make([]int, 0)
+
+	for _, s := range strNums {
+
+		arr := strings.Split(s, "")
+		for _, v := range arr {
+
+			n, err := strconv.Atoi(v)
+			if err != nil {
+				return "", nil, fmt.Errorf("number cant be processed %v", err)
+			}
+			num = append(num, n)
+		}
+		nums = append(nums, num)
 	}
 
-	if _, err = fmt.Scanf("%d", &max); err != nil {
-		return 0, 0, "", err
-	}
+	return fname, nums, nil
 
-	return min, max, filename, nil
 }
 
 func getAlgo(f string) (algo, error) {
 	file, err := os.Open(f)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cant open file: %s %v", f, err)
 	}
 	defer file.Close()
 	scanner := bufio.NewScanner(file)
@@ -128,5 +142,5 @@ func getAlgo(f string) (algo, error) {
 }
 
 func usage(n string) {
-	fmt.Printf("usage: %v filename<string> | filename<string> min<int> max<int>\n", n)
+	fmt.Printf("usage: %v filename<string> nums<int>...\n", n)
 }
