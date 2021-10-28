@@ -68,11 +68,15 @@ func (t *Triangle) Square() float64 {
 }
 
 func stringTriangle(t string) (*Triangle, error) {
+
 	str := strings.ToLower(t)
 	str = strings.ReplaceAll(str, " ", "")
 	str = strings.ReplaceAll(str, "\t", "")
 	arr := strings.Split(str, ",")
 
+	if len(arr) != 3 {
+		return nil, fmt.Errorf("incorrect string format")
+	}
 	name := arr[0]
 
 	a, err := strconv.ParseFloat(arr[1], 64)
