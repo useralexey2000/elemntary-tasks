@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strconv"
 	"strings"
@@ -14,21 +15,30 @@ const (
 	piter  = "Piter"
 )
 
-var numLengthErr = errors.New("wrong length of num, must  be 6")
+var notCorrectNum = errors.New("cot correct number")
 var argLenghtErr = errors.New("wrong length of args, must  be > 2")
 
 func main() {
+	// readArgs([]string{"main", "fname", "012345", "543210"})
+
 	file, nums, err := readArgs(os.Args)
-	// file, nums, err := readArgs([]string{"main", "fname", "101110"})
 	if err != nil {
 		fmt.Println(err)
 		usage(os.Args[0])
 		os.Exit(1)
 	}
 
-	a, err := getAlgo(file)
+	f, err := os.Open(file)
+	if err != nil {
+		panic("cant open file")
+	}
+	al, found := getAlgo(f)
 
-	res, err := countLuckyNum(nums, a)
+	if !found {
+		panic("cant find algo")
+	}
+
+	res, err := countLuckyNum(nums, al)
 	if err != nil {
 		fmt.Println(err)
 		usage(os.Args[0])
@@ -41,11 +51,11 @@ func main() {
 
 type algo func([]int) (bool, error)
 
-func countLuckyNum(nums [][]int, a algo) (int, error) {
+func countLuckyNum(nums [][]int, al algo) (int, error) {
 	var counter int
 
 	for _, v := range nums {
-		b, err := a(v)
+		b, err := al(v)
 		if err != nil {
 			return 0, err
 		}
@@ -57,9 +67,26 @@ func countLuckyNum(nums [][]int, a algo) (int, error) {
 	return counter, nil
 }
 
-func piterAlgo(num []int) (bool, error) {
+// check if len == 6
+// check if negative
+// check if n > 9
+func checkNum(num []int) bool {
 	if len(num) != 6 {
-		return false, numLengthErr
+		return false
+	}
+
+	for _, v := range num {
+		if v > 9 || v < 0 {
+			return false
+		}
+	}
+	return true
+}
+
+func piterAlgo(num []int) (bool, error) {
+
+	if !checkNum(num) {
+		return false, notCorrectNum
 	}
 
 	right := num[0] + num[1] + num[2]
@@ -69,8 +96,9 @@ func piterAlgo(num []int) (bool, error) {
 }
 
 func moscowAlgo(num []int) (bool, error) {
-	if len(num) != 6 {
-		return false, numLengthErr
+
+	if !checkNum(num) {
+		return false, notCorrectNum
 	}
 
 	even, odd := 0, 0
@@ -86,6 +114,7 @@ func moscowAlgo(num []int) (bool, error) {
 	return even == odd, nil
 }
 
+// returns filename for algo, nested array of ints each lengh=6(length of ticket), err
 func readArgs(args []string) (string, [][]int, error) {
 	// at least one number should be specified
 	if len(args) < 3 {
@@ -96,16 +125,16 @@ func readArgs(args []string) (string, [][]int, error) {
 	strNums := args[2:]
 
 	nums := make([][]int, 0)
-	num := make([]int, 0)
 
 	for _, s := range strNums {
 
+		num := make([]int, 0)
 		arr := strings.Split(s, "")
 		for _, v := range arr {
 
 			n, err := strconv.Atoi(v)
 			if err != nil {
-				return "", nil, fmt.Errorf("number cant be processed %v", err)
+				return "", nil, fmt.Errorf("number cant be processed %w", err)
 			}
 			num = append(num, n)
 		}
@@ -116,29 +145,23 @@ func readArgs(args []string) (string, [][]int, error) {
 
 }
 
-func getAlgo(f string) (algo, error) {
-	file, err := os.Open(f)
-	if err != nil {
-		return nil, fmt.Errorf("cant open file: %s %v", f, err)
-	}
-	defer file.Close()
-	scanner := bufio.NewScanner(file)
+func getAlgo(r io.Reader) (algo, bool) {
 
-	if !scanner.Scan() {
-		return nil, fmt.Errorf("cant read from file: %s", f)
-	}
+	scanner := bufio.NewScanner(r)
+
+	scanner.Scan()
 
 	str := scanner.Text()
 
 	if strings.Contains(str, moscow) {
-		return moscowAlgo, nil
+		return moscowAlgo, true
 	}
 
 	if strings.Contains(str, piter) {
-		return piterAlgo, nil
+		return piterAlgo, true
 	}
-	return nil, fmt.Errorf("cant find algos from file: %s", f)
 
+	return nil, false
 }
 
 func usage(n string) {
