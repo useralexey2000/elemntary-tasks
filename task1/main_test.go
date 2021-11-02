@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"strconv"
 	"testing"
 )
@@ -45,7 +46,8 @@ func TestReadArgs(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 
 			w, h, err := readArgs(tt.args)
-			if w != tt.w && h != tt.h && err != tt.err {
+
+			if !errors.Is(err, tt.err) || w != tt.w || h != tt.h {
 				t.Errorf("%s: readArgs(%v) = %d, %d, %v want: %d, %d, %v ", tt.name, tt.args, w, h, err, tt.w, tt.h, tt.err)
 			}
 		})
