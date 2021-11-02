@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strconv"
 	"strings"
@@ -13,17 +14,15 @@ var zeroSideErr = errors.New("side cant be <=0")
 
 func main() {
 
-	scanner := bufio.NewScanner(os.Stdin)
-
 	for {
 
-		e1, err := readEnvelope(scanner, 1)
+		e1, err := readEnvelope(os.Stdin, 1)
 		if err != nil {
 			fmt.Println(err)
 			continue
 		}
 
-		e2, err := readEnvelope(scanner, 2)
+		e2, err := readEnvelope(os.Stdin, 2)
 		if err != nil {
 			fmt.Println(err)
 			continue
@@ -32,7 +31,7 @@ func main() {
 		b := e1.Fit(e2)
 		print(e1, e2, b)
 
-		if askRepeat(scanner) {
+		if askRepeat(os.Stdin) {
 			continue
 		}
 
@@ -44,6 +43,13 @@ type Envelope struct {
 	id int
 	A  float64
 	B  float64
+}
+
+func NewEnvelope(id int, a, b float64) (*Envelope, error) {
+	if a <= 0 || b <= 0 {
+		return nil, zeroSideErr
+	}
+	return &Envelope{id: id, A: a, B: b}, nil
 }
 
 func (e *Envelope) Fit(e1 *Envelope) bool {
@@ -61,55 +67,35 @@ func print(e1, e2 *Envelope, b bool) {
 	fmt.Printf("envelope #%d: (%f, %f) can't accomodate envelope #%d: (%f, %f)\n", e1.id, e1.A, e1.B, e2.id, e2.A, e2.B)
 }
 
-func readArgs(scanner *bufio.Scanner) (float64, error) {
-
-	scanner.Scan()
-	str := scanner.Text()
-
-	side, err := strconv.ParseFloat(str, 64)
-
-	if err != nil {
-		return 0, fmt.Errorf("can`t read argument %v", err)
-	}
-	return side, nil
-}
-
-func readEnvelope(scanner *bufio.Scanner, id int) (*Envelope, error) {
+func readEnvelope(r io.Reader, id int) (*Envelope, error) {
 
 	fmt.Printf("please enter envelope %d side a<float>\n", id)
 
+	scanner := bufio.NewScanner(r)
 	scanner.Scan()
 	str := scanner.Text()
+
 	a, err := strconv.ParseFloat(str, 64)
-
 	if err != nil {
-		return nil, fmt.Errorf("can`t read argument %v", err)
+		return nil, fmt.Errorf("can`t read argument %w", err)
 	}
-
-	if a <= 0 {
-		return nil, zeroSideErr
-	}
-
 	fmt.Printf("please enter envelope %d side b<float>\n", id)
 
 	scanner.Scan()
 	str = scanner.Text()
+
 	b, err := strconv.ParseFloat(str, 64)
-
 	if err != nil {
-		return nil, fmt.Errorf("can`t read argument %v", err)
+		return nil, fmt.Errorf("can`t read argument %w", err)
 	}
 
-	if b <= 0 {
-		return nil, zeroSideErr
-	}
-
-	return &Envelope{id: id, A: a, B: b}, nil
+	return NewEnvelope(id, a, b)
 }
 
-func askRepeat(scanner *bufio.Scanner) bool {
+func askRepeat(r io.Reader) bool {
 	fmt.Println("Do you want to start again?<yes|y>")
 
+	scanner := bufio.NewScanner(r)
 	scanner.Scan()
 	str := scanner.Text()
 	str = strings.ToLower(strings.Trim(str, " "))

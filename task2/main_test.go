@@ -1,10 +1,35 @@
 package main
 
 import (
-	"bufio"
+	"errors"
+	"io"
+	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 )
+
+func TestNewEnvelope(t *testing.T) {
+	tests := []struct {
+		name string
+		id   int
+		a    float64
+		b    float64
+		e    *Envelope
+		err  error
+	}{
+		{name: "a<=0", id: 1, a: 0, b: 4, e: nil, err: zeroSideErr},
+		{name: "b>=0", id: 1, a: 4, b: 0, e: nil, err: zeroSideErr},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			env, err := NewEnvelope(tt.id, tt.a, tt.b)
+			if err != tt.err || !reflect.DeepEqual(env, tt.e) {
+				t.Errorf("%s: NewEnvelope(%d, %f, %f) = %v,%v want %v, %v", tt.name, tt.id, tt.a, tt.b, env, err, tt.e, tt.err)
+			}
+		})
+	}
+}
 
 func TestEnvelopeFit(t *testing.T) {
 	tests := []struct {
@@ -33,23 +58,24 @@ func TestReadEnvelope(t *testing.T) {
 	// var scanner *bufio.Scanner
 
 	tests := []struct {
-		name    string
-		scanner *bufio.Scanner
-		id      int
-		e       *Envelope
-		err     error
+		name   string
+		reader io.Reader
+		id     int
+		e      *Envelope
+		err    error
 	}{
-		{name: "envelopcorrect", scanner: bufio.NewScanner(strings.NewReader("10.0\n5.4\n")), id: 1, e: &Envelope{id: 1, A: 10.0, B: 5.4}, err: nil},
-		{name: "e.A <=0", scanner: bufio.NewScanner(strings.NewReader("0.0\n5.4\n")), id: 1, e: nil, err: zeroSideErr},
-		{name: "e.B <=0", scanner: bufio.NewScanner(strings.NewReader("4.0\n0.0\n")), id: 1, e: nil, err: zeroSideErr},
+		{name: "canread", reader: strings.NewReader("10.0\n5.4\n"), id: 1, e: &Envelope{id: 1, A: 10.0, B: 5.4}, err: nil},
+		{name: "e.A=str", reader: strings.NewReader("a\n5.4\n"), id: 1, e: nil, err: strconv.ErrSyntax},
+		{name: "e.B=str", reader: strings.NewReader("4.0\na\n"), id: 1, e: nil, err: strconv.ErrSyntax},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			e1, err := readEnvelope(tt.scanner, tt.id)
-			if err != tt.err && *e1 != *tt.e {
-				t.Errorf("%s: readEnvelope(scanner, %d) = %v want: %v", tt.name, tt.id, tt.e, e1)
+			e1, err := readEnvelope(tt.reader, tt.id)
+
+			if !errors.Is(err, tt.err) || !reflect.DeepEqual(tt.e, e1) {
+				t.Errorf("%s: readEnvelope(reader, %d) = %v, %T want: %v, %T", tt.name, tt.id, e1, err, tt.e, tt.err)
 
 			}
 		})
@@ -58,20 +84,20 @@ func TestReadEnvelope(t *testing.T) {
 
 func TestAskRepeat(t *testing.T) {
 	tests := []struct {
-		name    string
-		scanner *bufio.Scanner
-		want    bool
+		name   string
+		reader io.Reader
+		want   bool
 	}{
-		{name: "yeswithspace", scanner: bufio.NewScanner(strings.NewReader("yes  ")), want: true},
-		{name: "ywithspace", scanner: bufio.NewScanner(strings.NewReader("  y  ")), want: true},
-		{name: "Yuppercase", scanner: bufio.NewScanner(strings.NewReader(" Y ")), want: true},
-		{name: "no", scanner: bufio.NewScanner(strings.NewReader("no")), want: false},
+		{name: "yeswithspace", reader: strings.NewReader("yes  "), want: true},
+		{name: "ywithspace", reader: strings.NewReader("  y  "), want: true},
+		{name: "Yuppercase", reader: strings.NewReader(" Y "), want: true},
+		{name: "no", reader: strings.NewReader("no"), want: false},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			b := askRepeat(tt.scanner)
+			b := askRepeat(tt.reader)
 			if b != tt.want {
 				t.Errorf("%s: askRepeat(scanner) = %t want: %t", tt.name, b, tt.want)
 
