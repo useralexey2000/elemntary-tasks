@@ -5,51 +5,65 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"strconv"
+	"strings"
 )
 
+var notCorrectArgsNum = errors.New("not correct number of args")
+
 func main() {
-	min, max, num, err := readArgs()
+	min, max, num, err := readArgs(os.Args)
 	if err != nil {
 		fmt.Println(err)
 		usage(os.Args[0])
 		os.Exit(1)
 	}
-	naturalNums(min, max, num)
+	nums := naturalNums(min, max, num)
+	fmt.Println(strings.Join(nums, ","))
 }
 
 // ./main min max n
-func naturalNums(min, max, n int) {
+func naturalNums(min, max, n int) []string {
+	nums := make([]string, 0)
+	// n cant be negative max cant be < min max cant be < 0
+	if n <= 0 || min > max || max < 0 {
+		return nums
+	}
+
+	if min < 0 {
+		min = 0
+	}
 	// max  cant be > sqrt of n
 	maxNew := int(math.Sqrt(float64(n)))
+	if max > maxNew {
+		max = maxNew
+	}
 
 	for i := min; i <= maxNew; i++ {
-		fmt.Println(i)
+		nums = append(nums, strconv.Itoa(i))
 	}
+	return nums
 }
 
-func readArgs() (int, int, int, error) {
-	var (
-		min int
-		max int
-		num int
-	)
+func readArgs(args []string) (int, int, int, error) {
 
-	args := os.Args
-	if len(args) < 4 {
-		return 0, 0, 0, errors.New("Not enough args")
-	}
-	var err error
-
-	if _, err = fmt.Scanf("%d", &min); err != nil {
-		return 0, 0, 0, err
+	if len(args) != 4 {
+		return 0, 0, 0, notCorrectArgsNum
 	}
 
-	if _, err = fmt.Scanf("%d", &max); err != nil {
-		return 0, 0, 0, err
+	min, err := strconv.Atoi(args[1])
+	if err != nil {
+		return 0, 0, 0, fmt.Errorf("cant read arg min %w", err)
 	}
 
-	if _, err = fmt.Scanf("%s", &num); err != nil {
-		return 0, 0, 0, err
+	max, err := strconv.Atoi(args[2])
+	if err != nil {
+		return 0, 0, 0, fmt.Errorf("cant read arg max %w", err)
+	}
+
+	num, err := strconv.Atoi(args[3])
+	if err != nil {
+		return 0, 0, 0, fmt.Errorf("cant read arg num %w", err)
 	}
 
 	return min, max, num, nil
