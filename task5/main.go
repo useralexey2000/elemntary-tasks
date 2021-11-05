@@ -1,111 +1,124 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
+var notCorrectArgsNum = errors.New("not correct number of args")
+var numbers map[int]map[int]string
+
 func main() {
-	ones := make(map[int]string)
-	ones[0] = "ноль"
-	ones[1] = "один|одна"
-	ones[2] = "два|две"
-	ones[3] = "три"
-	ones[4] = "четыре"
-	ones[5] = "пять"
-	ones[6] = "шесть"
-	ones[7] = "семь"
-	ones[8] = "восемь"
-	ones[9] = "девять"
+	// ones := make(map[int]string)
+	// ones[0] = "ноль"
+	// ones[1] = "один|одна"
+	// ones[2] = "два|две"
+	// ones[3] = "три"
+	// ones[4] = "четыре"
+	// ones[5] = "пять"
+	// ones[6] = "шесть"
+	// ones[7] = "семь"
+	// ones[8] = "восемь"
+	// ones[9] = "девять"
 
-	teens := make(map[int]string)
-	teens[10] = "десять"
-	teens[11] = "одинадцать"
-	teens[12] = "двенадцать"
-	teens[13] = "тринадцать"
-	teens[14] = "четырнадцать"
-	teens[15] = "пятнадцать"
-	teens[16] = "шестнадцать"
-	teens[17] = "семнадцать"
-	teens[18] = "восемнадцать"
-	teens[19] = "девятнадцать"
+	// teens := make(map[int]string)
+	// teens[10] = "десять"
+	// teens[11] = "одинадцать"
+	// teens[12] = "двенадцать"
+	// teens[13] = "тринадцать"
+	// teens[14] = "четырнадцать"
+	// teens[15] = "пятнадцать"
+	// teens[16] = "шестнадцать"
+	// teens[17] = "семнадцать"
+	// teens[18] = "восемнадцать"
+	// teens[19] = "девятнадцать"
 
-	tens := make(map[int]string)
-	tens[2] = "двадцать"
-	tens[3] = "тридцать"
-	tens[4] = "сорок"
-	tens[5] = "пятьдесят"
-	tens[6] = "шестьдесят"
-	tens[7] = "семыдесят"
-	tens[8] = "восемьдесят"
-	tens[9] = "девяносто"
+	// tens := make(map[int]string)
+	// tens[2] = "двадцать"
+	// tens[3] = "тридцать"
+	// tens[4] = "сорок"
+	// tens[5] = "пятьдесят"
+	// tens[6] = "шестьдесят"
+	// tens[7] = "семыдесят"
+	// tens[8] = "восемьдесят"
+	// tens[9] = "девяносто"
 
-	hundreds := make(map[int]string)
-	hundreds[1] = "сто"
-	hundreds[2] = "двести"
-	hundreds[3] = "триста"
-	hundreds[4] = "четыреста"
-	hundreds[5] = "пятьсот"
-	hundreds[6] = "шестьсот"
-	hundreds[7] = "семысот"
-	hundreds[8] = "восемьсот"
-	hundreds[9] = "девятьсот"
+	// hundreds := make(map[int]string)
+	// hundreds[1] = "сто"
+	// hundreds[2] = "двести"
+	// hundreds[3] = "триста"
+	// hundreds[4] = "четыреста"
+	// hundreds[5] = "пятьсот"
+	// hundreds[6] = "шестьсот"
+	// hundreds[7] = "семысот"
+	// hundreds[8] = "восемьсот"
+	// hundreds[9] = "девятьсот"
 
-	thousands := make(map[int]string)
-	thousands[0] = "тысяч"
-	thousands[1] = "тысяча"
-	thousands[2] = "тысячи"
-	thousands[3] = "тысячи"
-	thousands[4] = "тысячи"
-	thousands[5] = "тысяч"
-	thousands[6] = "тысяч"
-	thousands[7] = "тысяч"
-	thousands[8] = "тысяч"
-	thousands[9] = "тысяч"
+	// thousands := make(map[int]string)
+	// thousands[0] = "тысяч"
+	// thousands[1] = "тысяча"
+	// thousands[2] = "тысячи"
+	// thousands[3] = "тысячи"
+	// thousands[4] = "тысячи"
+	// thousands[5] = "тысяч"
+	// thousands[6] = "тысяч"
+	// thousands[7] = "тысяч"
+	// thousands[8] = "тысяч"
+	// thousands[9] = "тысяч"
 
-	millions := make(map[int]string)
-	millions[0] = "миллионов"
-	millions[1] = "миллион"
-	millions[2] = "миллиона"
-	millions[3] = "миллиона"
-	millions[4] = "миллиона"
-	millions[5] = "миллионов"
-	millions[6] = "миллионов"
-	millions[7] = "миллионов"
-	millions[8] = "миллионов"
-	millions[9] = "миллионов"
+	// millions := make(map[int]string)
+	// millions[0] = "миллионов"
+	// millions[1] = "миллион"
+	// millions[2] = "миллиона"
+	// millions[3] = "миллиона"
+	// millions[4] = "миллиона"
+	// millions[5] = "миллионов"
+	// millions[6] = "миллионов"
+	// millions[7] = "миллионов"
+	// millions[8] = "миллионов"
+	// millions[9] = "миллионов"
 
-	billions := make(map[int]string)
-	billions[0] = "миллиардов"
-	billions[1] = "миллиард"
-	billions[2] = "миллиарда"
-	billions[3] = "миллиарда"
-	billions[4] = "миллиарда"
-	billions[5] = "миллиардов"
-	billions[6] = "миллиардов"
-	billions[7] = "миллиардов"
-	billions[8] = "миллиардов"
-	billions[9] = "миллиардов"
+	// billions := make(map[int]string)
+	// billions[0] = "миллиардов"
+	// billions[1] = "миллиард"
+	// billions[2] = "миллиарда"
+	// billions[3] = "миллиарда"
+	// billions[4] = "миллиарда"
+	// billions[5] = "миллиардов"
+	// billions[6] = "миллиардов"
+	// billions[7] = "миллиардов"
+	// billions[8] = "миллиардов"
+	// billions[9] = "миллиардов"
 
-	numbers := make(map[int]map[int]string)
-	numbers[0] = ones
-	numbers[1] = teens
-	numbers[2] = tens
-	numbers[3] = hundreds
-	numbers[4] = thousands
-	numbers[5] = millions
-	numbers[6] = billions
+	// // numbers := make(map[int]map[int]string)
+	// numbers[0] = ones
+	// numbers[1] = teens
+	// numbers[2] = tens
+	// numbers[3] = hundreds
+	// numbers[4] = thousands
+	// numbers[5] = millions
+	// numbers[6] = billions
 
-	i := 32001110
-	// i := 0
+	initNumbers()
+
+	// i := 32001110
+	i := 1100
+
 	arr := hundredBlocks(i)
-	nums := numBlocks(arr)
 	fmt.Println(arr)
+
+	nums := numBlocks(arr)
 	fmt.Println(nums)
-	s := sprintNum(nums, numbers)
-	fmt.Println(s)
+
+	ss := sprintArrNum(nums, numbers)
+	fmt.Println(ss)
+	// s := blocksToString(ss)
+	// fmt.Println(s)
 }
 
+// takes num and returns block of ints by category: .humdreds,thousands,mlns (reversed)
 func hundredBlocks(i int) []int {
 	arr := make([]int, 0)
 
@@ -120,7 +133,7 @@ func hundredBlocks(i int) []int {
 		arr = append(arr, k)
 		i = j
 	}
-	fmt.Println(arr)
+	// fmt.Println(arr)
 	return arr
 }
 
@@ -132,7 +145,7 @@ type num struct {
 
 // ones   // teens   // tens      // hundreds
 // (0<i<10) (9<i<20) (19<i<100 ) (99<i<1000)
-
+//  takes hundred blocks, devides it into numbers and returns blocks of nums
 func numBlocks(arr []int) [][]num {
 	nums := make([][]num, 0)
 
@@ -223,7 +236,7 @@ func numBlocks(arr []int) [][]num {
 	return nums
 }
 
-func sprintNum(nums [][]num, m map[int]map[int]string) string {
+func sprintArrNum(nums [][]num, m map[int]map[int]string) [][]string {
 
 	arr := make([][]string, 0)
 
@@ -231,7 +244,8 @@ func sprintNum(nums [][]num, m map[int]map[int]string) string {
 
 		// if length = 0 and num == 0 return 0
 		if len(nums) == 1 && v[0].val == 0 {
-			return m[0][0]
+			arr = append(arr, []string{m[0][0]})
+			return arr
 		}
 
 		// if 000 block ignore
@@ -246,6 +260,7 @@ func sprintNum(nums [][]num, m map[int]map[int]string) string {
 		for _, n = range v {
 
 			// if 0 is present in a block ignore
+			// ?? CHECK IT!!
 			if n.val == 0 {
 				continue
 			}
@@ -282,7 +297,7 @@ func sprintNum(nums [][]num, m map[int]map[int]string) string {
 		arr = append(arr, tmp)
 	}
 	// create string from arr
-	return blocksToString(arr)
+	return arr
 }
 
 func blocksToString(arr [][]string) string {
@@ -298,4 +313,115 @@ func blocksToString(arr [][]string) string {
 		sb.WriteString(sep)
 	}
 	return sb.String()
+}
+
+func readArgs(args []string) (int, error) {
+
+	if len(args) != 2 {
+		return 0, notCorrectArgsNum
+	}
+
+	num, err := strconv.Atoi(args[1])
+	if err != nil {
+		return 0, fmt.Errorf("cant read arg num %w", err)
+	}
+
+	return num, nil
+}
+
+func usage(n string) {
+	fmt.Printf("usage: %v number<int>\n", n)
+}
+
+func initNumbers() {
+	numbers = make(map[int]map[int]string)
+
+	ones := make(map[int]string)
+	ones[0] = "ноль"
+	ones[1] = "один|одна"
+	ones[2] = "два|две"
+	ones[3] = "три"
+	ones[4] = "четыре"
+	ones[5] = "пять"
+	ones[6] = "шесть"
+	ones[7] = "семь"
+	ones[8] = "восемь"
+	ones[9] = "девять"
+
+	teens := make(map[int]string)
+	teens[10] = "десять"
+	teens[11] = "одинадцать"
+	teens[12] = "двенадцать"
+	teens[13] = "тринадцать"
+	teens[14] = "четырнадцать"
+	teens[15] = "пятнадцать"
+	teens[16] = "шестнадцать"
+	teens[17] = "семнадцать"
+	teens[18] = "восемнадцать"
+	teens[19] = "девятнадцать"
+
+	tens := make(map[int]string)
+	tens[2] = "двадцать"
+	tens[3] = "тридцать"
+	tens[4] = "сорок"
+	tens[5] = "пятьдесят"
+	tens[6] = "шестьдесят"
+	tens[7] = "семыдесят"
+	tens[8] = "восемьдесят"
+	tens[9] = "девяносто"
+
+	hundreds := make(map[int]string)
+	hundreds[1] = "сто"
+	hundreds[2] = "двести"
+	hundreds[3] = "триста"
+	hundreds[4] = "четыреста"
+	hundreds[5] = "пятьсот"
+	hundreds[6] = "шестьсот"
+	hundreds[7] = "семысот"
+	hundreds[8] = "восемьсот"
+	hundreds[9] = "девятьсот"
+
+	thousands := make(map[int]string)
+	thousands[0] = "тысяч"
+	thousands[1] = "тысяча"
+	thousands[2] = "тысячи"
+	thousands[3] = "тысячи"
+	thousands[4] = "тысячи"
+	thousands[5] = "тысяч"
+	thousands[6] = "тысяч"
+	thousands[7] = "тысяч"
+	thousands[8] = "тысяч"
+	thousands[9] = "тысяч"
+
+	millions := make(map[int]string)
+	millions[0] = "миллионов"
+	millions[1] = "миллион"
+	millions[2] = "миллиона"
+	millions[3] = "миллиона"
+	millions[4] = "миллиона"
+	millions[5] = "миллионов"
+	millions[6] = "миллионов"
+	millions[7] = "миллионов"
+	millions[8] = "миллионов"
+	millions[9] = "миллионов"
+
+	billions := make(map[int]string)
+	billions[0] = "миллиардов"
+	billions[1] = "миллиард"
+	billions[2] = "миллиарда"
+	billions[3] = "миллиарда"
+	billions[4] = "миллиарда"
+	billions[5] = "миллиардов"
+	billions[6] = "миллиардов"
+	billions[7] = "миллиардов"
+	billions[8] = "миллиардов"
+	billions[9] = "миллиардов"
+
+	numbers[0] = ones
+	numbers[1] = teens
+	numbers[2] = tens
+	numbers[3] = hundreds
+	numbers[4] = thousands
+	numbers[5] = millions
+	numbers[6] = billions
 }
