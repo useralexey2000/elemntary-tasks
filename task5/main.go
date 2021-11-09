@@ -7,119 +7,28 @@ import (
 	"strings"
 )
 
-var notCorrectArgsNum = errors.New("not correct number of args")
-var numbers map[int]map[int]string
+var errArgsNum = errors.New("not correct number of args")
+var errExeedsPermitedValue = errors.New("number exeeds permited value")
 
 func main() {
-	// ones := make(map[int]string)
-	// ones[0] = "ноль"
-	// ones[1] = "один|одна"
-	// ones[2] = "два|две"
-	// ones[3] = "три"
-	// ones[4] = "четыре"
-	// ones[5] = "пять"
-	// ones[6] = "шесть"
-	// ones[7] = "семь"
-	// ones[8] = "восемь"
-	// ones[9] = "девять"
 
-	// teens := make(map[int]string)
-	// teens[10] = "десять"
-	// teens[11] = "одинадцать"
-	// teens[12] = "двенадцать"
-	// teens[13] = "тринадцать"
-	// teens[14] = "четырнадцать"
-	// teens[15] = "пятнадцать"
-	// teens[16] = "шестнадцать"
-	// teens[17] = "семнадцать"
-	// teens[18] = "восемнадцать"
-	// teens[19] = "девятнадцать"
+	numbers := initNumberMapper()
 
-	// tens := make(map[int]string)
-	// tens[2] = "двадцать"
-	// tens[3] = "тридцать"
-	// tens[4] = "сорок"
-	// tens[5] = "пятьдесят"
-	// tens[6] = "шестьдесят"
-	// tens[7] = "семыдесят"
-	// tens[8] = "восемьдесят"
-	// tens[9] = "девяносто"
+	i := 3211810111
 
-	// hundreds := make(map[int]string)
-	// hundreds[1] = "сто"
-	// hundreds[2] = "двести"
-	// hundreds[3] = "триста"
-	// hundreds[4] = "четыреста"
-	// hundreds[5] = "пятьсот"
-	// hundreds[6] = "шестьсот"
-	// hundreds[7] = "семысот"
-	// hundreds[8] = "восемьсот"
-	// hundreds[9] = "девятьсот"
-
-	// thousands := make(map[int]string)
-	// thousands[0] = "тысяч"
-	// thousands[1] = "тысяча"
-	// thousands[2] = "тысячи"
-	// thousands[3] = "тысячи"
-	// thousands[4] = "тысячи"
-	// thousands[5] = "тысяч"
-	// thousands[6] = "тысяч"
-	// thousands[7] = "тысяч"
-	// thousands[8] = "тысяч"
-	// thousands[9] = "тысяч"
-
-	// millions := make(map[int]string)
-	// millions[0] = "миллионов"
-	// millions[1] = "миллион"
-	// millions[2] = "миллиона"
-	// millions[3] = "миллиона"
-	// millions[4] = "миллиона"
-	// millions[5] = "миллионов"
-	// millions[6] = "миллионов"
-	// millions[7] = "миллионов"
-	// millions[8] = "миллионов"
-	// millions[9] = "миллионов"
-
-	// billions := make(map[int]string)
-	// billions[0] = "миллиардов"
-	// billions[1] = "миллиард"
-	// billions[2] = "миллиарда"
-	// billions[3] = "миллиарда"
-	// billions[4] = "миллиарда"
-	// billions[5] = "миллиардов"
-	// billions[6] = "миллиардов"
-	// billions[7] = "миллиардов"
-	// billions[8] = "миллиардов"
-	// billions[9] = "миллиардов"
-
-	// // numbers := make(map[int]map[int]string)
-	// numbers[0] = ones
-	// numbers[1] = teens
-	// numbers[2] = tens
-	// numbers[3] = hundreds
-	// numbers[4] = thousands
-	// numbers[5] = millions
-	// numbers[6] = billions
-
-	initNumbers()
-
-	// i := 32001110
-	i := 1100
-
-	arr := hundredBlocks(i)
+	arr := splitNumber(i)
 	fmt.Println(arr)
 
-	nums := numBlocks(arr)
-	fmt.Println(nums)
+	strarr := sprintArrNum(arr, numbers)
 
-	ss := sprintArrNum(nums, numbers)
-	fmt.Println(ss)
-	// s := blocksToString(ss)
-	// fmt.Println(s)
+	fmt.Println(strarr)
+
+	s := blocksToString(strarr)
+	fmt.Println(s)
 }
 
-// takes num and returns block of ints by category: .humdreds,thousands,mlns (reversed)
-func hundredBlocks(i int) []int {
+// takes num and returns blocks of ints by category: thousands,mlns,billns
+func splitThousand(i int) []int {
 	arr := make([]int, 0)
 
 	if i == 0 {
@@ -128,176 +37,116 @@ func hundredBlocks(i int) []int {
 	}
 
 	for i > 0 {
-		j := i / 1000
-		k := i % 1000
-		arr = append(arr, k)
-		i = j
+		next := i / 1000
+		block := i % 1000
+		arr = append([]int{block}, arr...)
+		i = next
 	}
-	// fmt.Println(arr)
+
 	return arr
 }
 
-type num struct {
-	val  int
-	pos  int
-	rank int
-}
+// takes num and returns splited hundred by category: ones, tens, hundreds
+func splitHundred(i int) []int {
 
-// ones   // teens   // tens      // hundreds
-// (0<i<10) (9<i<20) (19<i<100 ) (99<i<1000)
-//  takes hundred blocks, devides it into numbers and returns blocks of nums
-func numBlocks(arr []int) [][]num {
-	nums := make([][]num, 0)
+	arr := make([]int, 0)
 
-	for i, v := range arr {
-
-		tmp := make([]num, 0)
-
-		if len(arr) == 1 && v == 0 {
-			n := num{
-				val:  v,
-				pos:  0,
-				rank: i,
-			}
-			tmp = append(tmp, n)
-			// nums = append(nums, tmp)
-			nums = append([][]num{tmp}, nums...)
-			return nums
-		}
-
-		if v > 99 && v < 1000 {
-			val := v / 100
-			n := num{
-				val:  val,
-				pos:  3,
-				rank: i,
-			}
-			tmp = append(tmp, n)
-			v = v % 100
-		}
-
-		if v > 19 && v < 100 {
-			val := v / 10
-			n := num{
-				val:  val,
-				pos:  2,
-				rank: i,
-			}
-			tmp = append(tmp, n)
-			v = v % 10
-		}
-
-		if v > 9 && v < 20 {
-			n := num{
-				val:  v,
-				pos:  1,
-				rank: i,
-			}
-			tmp = append(tmp, n)
-			// nums = append(nums, tmp)
-			nums = append([][]num{tmp}, nums...)
-			continue
-		}
-		if v > 0 && v < 10 {
-			n := num{
-				val:  v,
-				pos:  0,
-				rank: i,
-			}
-			tmp = append(tmp, n)
-			// nums = append(nums, tmp)
-			nums = append([][]num{tmp}, nums...)
-			continue
-		}
-
-		// can be omited, empty [] arr is returned then
-		//  if block is 0 add [0]
-		if len(tmp) == 0 && v == 0 {
-			n := num{
-				val:  v,
-				pos:  0,
-				rank: i,
-			}
-			tmp = append(tmp, n)
-			// nums = append(nums, tmp)
-			nums = append([][]num{tmp}, nums...)
-		}
-
-		// nums = append(nums, tmp)
-		nums = append([][]num{tmp}, nums...)
-
+	var hundred int
+	if i > 99 {
+		hundred = i / 100
+		i = i % 100
 	}
-	// reverse order to normal
-	// newnums := make([][]num, 0)
-	// for i := len(nums) - 1; i >= 0; i-- {
-	// 	newnums = append(newnums, nums[i])
-	// }
-	// return newnums
-	return nums
+
+	arr = append(arr, hundred)
+
+	var ten int
+	if i > 19 {
+		ten = i / 10
+		i = i % 10
+	}
+
+	arr = append(arr, ten)
+
+	arr = append(arr, i)
+
+	return arr
 }
 
-func sprintArrNum(nums [][]num, m map[int]map[int]string) [][]string {
+func splitNumber(i int) [][]int {
+	arr := make([][]int, 0)
+
+	thousands := splitThousand(i)
+
+	for _, v := range thousands {
+		hundreds := splitHundred(v)
+		arr = append(arr, hundreds)
+	}
+
+	return arr
+}
+
+func sprintArrNum(nums [][]int, m map[int]map[int]string) [][]string {
 
 	arr := make([][]string, 0)
 
-	for _, v := range nums {
+	for i, rank := len(nums)-1, 0; i >= 0; i, rank = i-1, rank+1 {
 
-		// if length = 0 and num == 0 return 0
-		if len(nums) == 1 && v[0].val == 0 {
-			arr = append(arr, []string{m[0][0]})
-			return arr
-		}
+		numberBlock := make([]string, 0)
 
-		// if 000 block ignore
-		if len(v) > 0 && v[0].val == 0 {
-			continue
-		}
-		// to append to a block with several nums
-		tmp := make([]string, 0)
+		// all values are same after 4 for pos > 0 (10 11 20 40 100 ...thousands / hundreds ...)
+		appendingRank := 5
+		for j, pos := 2, 0; j >= 0; j, pos = j-1, pos+1 {
 
-		//  n is last number in block | depending on it will be the block named
-		var n num
-		for _, n = range v {
+			val := nums[i][j]
 
-			// if 0 is present in a block ignore
-			// ?? CHECK IT!!
-			if n.val == 0 {
+			if val == 0 {
 				continue
 			}
 
-			// get string coresponding to value
-			str := m[n.pos][n.val]
+			if j == 2 && val <= 4 {
+				appendingRank = val
+			}
 
-			// (+3 added because blocks are devided by hundreds=0, thousands=1 etc...(first 3 omited)
-			// if rank = 1(+3) thousands  and value is 1 || 2 change to second name of <name1>|<name2>
-			if n.rank+3 == 4 && n.pos == 0 && (n.val == 1 || n.val == 2) {
+			str := m[pos][val]
+			//  if thousand and it`s 1 || 2
+			if i == len(nums)-2 && pos == 0 && (val == 1 || val == 2) {
 				str = strings.Split(str, "|")[1]
 			}
-			// otherwise change to first name  <name1>|<name2>
-			if n.pos == 0 && (n.val == 1 || n.val == 2) {
+
+			// if not thousand nad it`s 1 || 2
+			if pos == 0 && (val == 1 || val == 2) {
 				str = strings.Split(str, "|")[0]
 			}
 
-			tmp = append(tmp, str)
+			numberBlock = append([]string{str}, numberBlock...)
+
 		}
-		// dont add rank for blocks < 1000. hundred block dont have additiounal rank
-		if n.rank == 0 {
-			arr = append(arr, tmp)
+		// skip if 000
+		if len(numberBlock) == 0 {
 			continue
 		}
 
-		// For all values with rank > 0
-		// all values are same after 4 for pos > 1 (10 11 20 40 100 ...thousands / hundreds ...)
-		if n.pos >= 1 {
-			n.val = 5
+		// first block doesent have appending rank
+		if i == len(nums)-1 {
+			arr = append([][]string{numberBlock}, arr...)
+			continue
 		}
 
-		// append rank
-		tmp = append(tmp, m[n.rank+3][n.val])
-		arr = append(arr, tmp)
+		//  append rank
+		numberBlock = append(numberBlock, m[rank+2][appendingRank])
+
+		arr = append([][]string{numberBlock}, arr...)
+
 	}
-	// create string from arr
+
+	// handle zero
+	if len(arr) == 0 {
+		arr = append(arr, []string{m[0][0]})
+		return arr
+	}
+
 	return arr
+
 }
 
 func blocksToString(arr [][]string) string {
@@ -318,7 +167,7 @@ func blocksToString(arr [][]string) string {
 func readArgs(args []string) (int, error) {
 
 	if len(args) != 2 {
-		return 0, notCorrectArgsNum
+		return 0, errArgsNum
 	}
 
 	num, err := strconv.Atoi(args[1])
@@ -333,95 +182,86 @@ func usage(n string) {
 	fmt.Printf("usage: %v number<int>\n", n)
 }
 
-func initNumbers() {
-	numbers = make(map[int]map[int]string)
+func initNumberMapper() map[int]map[int]string {
 
-	ones := make(map[int]string)
-	ones[0] = "ноль"
-	ones[1] = "один|одна"
-	ones[2] = "два|две"
-	ones[3] = "три"
-	ones[4] = "четыре"
-	ones[5] = "пять"
-	ones[6] = "шесть"
-	ones[7] = "семь"
-	ones[8] = "восемь"
-	ones[9] = "девять"
+	ones := map[int]string{
+		0:  "ноль",
+		1:  "один|одна",
+		2:  "два|две",
+		3:  "три",
+		4:  "четыре",
+		5:  "пять",
+		6:  "шесть",
+		7:  "семь",
+		8:  "восемь",
+		9:  "девять",
+		10: "десять",
+		11: "одинадцать",
+		12: "двенадцать",
+		13: "тринадцать",
+		14: "четырнадцать",
+		15: "пятнадцать",
+		16: "шестнадцать",
+		17: "семнадцать",
+		18: "восемнадцать",
+		19: "девятнадцать",
+	}
 
-	teens := make(map[int]string)
-	teens[10] = "десять"
-	teens[11] = "одинадцать"
-	teens[12] = "двенадцать"
-	teens[13] = "тринадцать"
-	teens[14] = "четырнадцать"
-	teens[15] = "пятнадцать"
-	teens[16] = "шестнадцать"
-	teens[17] = "семнадцать"
-	teens[18] = "восемнадцать"
-	teens[19] = "девятнадцать"
+	tens := map[int]string{
+		2: "двадцать",
+		3: "тридцать",
+		4: "сорок",
+		5: "пятьдесят",
+		6: "шестьдесят",
+		7: "семыдесят",
+		8: "восемьдесят",
+		9: "девяносто",
+	}
 
-	tens := make(map[int]string)
-	tens[2] = "двадцать"
-	tens[3] = "тридцать"
-	tens[4] = "сорок"
-	tens[5] = "пятьдесят"
-	tens[6] = "шестьдесят"
-	tens[7] = "семыдесят"
-	tens[8] = "восемьдесят"
-	tens[9] = "девяносто"
+	hundreds := map[int]string{
+		1: "сто",
+		2: "двести",
+		3: "триста",
+		4: "четыреста",
+		5: "пятьсот",
+		6: "шестьсот",
+		7: "семысот",
+		8: "восемьсот",
+		9: "девятьсот",
+	}
 
-	hundreds := make(map[int]string)
-	hundreds[1] = "сто"
-	hundreds[2] = "двести"
-	hundreds[3] = "триста"
-	hundreds[4] = "четыреста"
-	hundreds[5] = "пятьсот"
-	hundreds[6] = "шестьсот"
-	hundreds[7] = "семысот"
-	hundreds[8] = "восемьсот"
-	hundreds[9] = "девятьсот"
+	thousands := map[int]string{
+		1: "тысяча",
+		2: "тысячи",
+		3: "тысячи",
+		4: "тысячи",
+		5: "тысяч",
+	}
 
-	thousands := make(map[int]string)
-	thousands[0] = "тысяч"
-	thousands[1] = "тысяча"
-	thousands[2] = "тысячи"
-	thousands[3] = "тысячи"
-	thousands[4] = "тысячи"
-	thousands[5] = "тысяч"
-	thousands[6] = "тысяч"
-	thousands[7] = "тысяч"
-	thousands[8] = "тысяч"
-	thousands[9] = "тысяч"
+	millions := map[int]string{
+		1: "миллион",
+		2: "миллиона",
+		3: "миллиона",
+		4: "миллиона",
+		5: "миллионов",
+	}
 
-	millions := make(map[int]string)
-	millions[0] = "миллионов"
-	millions[1] = "миллион"
-	millions[2] = "миллиона"
-	millions[3] = "миллиона"
-	millions[4] = "миллиона"
-	millions[5] = "миллионов"
-	millions[6] = "миллионов"
-	millions[7] = "миллионов"
-	millions[8] = "миллионов"
-	millions[9] = "миллионов"
+	billions := map[int]string{
+		1: "миллиард",
+		2: "миллиарда",
+		3: "миллиарда",
+		4: "миллиарда",
+		5: "миллиардов",
+	}
 
-	billions := make(map[int]string)
-	billions[0] = "миллиардов"
-	billions[1] = "миллиард"
-	billions[2] = "миллиарда"
-	billions[3] = "миллиарда"
-	billions[4] = "миллиарда"
-	billions[5] = "миллиардов"
-	billions[6] = "миллиардов"
-	billions[7] = "миллиардов"
-	billions[8] = "миллиардов"
-	billions[9] = "миллиардов"
+	numbers := map[int]map[int]string{
+		0: ones,
+		1: tens,
+		2: hundreds,
+		3: thousands,
+		4: millions,
+		5: billions,
+	}
 
-	numbers[0] = ones
-	numbers[1] = teens
-	numbers[2] = tens
-	numbers[3] = hundreds
-	numbers[4] = thousands
-	numbers[5] = millions
-	numbers[6] = billions
+	return numbers
 }
