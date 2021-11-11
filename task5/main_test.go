@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-// func readArgs(args []string) (int, error) {
+// func readArgs(args []string) (int, error)
 func TestReadArgs(t *testing.T) {
 	tests := []struct {
 		name string
@@ -15,7 +15,7 @@ func TestReadArgs(t *testing.T) {
 		num  int
 		err  error
 	}{
-		{name: "args!=2", args: []string{"main", "1", "2"}, num: 0, err: notCorrectArgsNum},
+		{name: "args!=2", args: []string{"main", "1", "2"}, num: 0, err: errArgsNum},
 		{name: "num=NaN", args: []string{"main", "a"}, num: 0, err: strconv.ErrSyntax},
 		{name: "ok", args: []string{"main", "100"}, num: 100, err: nil},
 	}
@@ -31,105 +31,115 @@ func TestReadArgs(t *testing.T) {
 	}
 }
 
-// func hundredBlocks(i int) []int {
-func TestHundredBlocks(t *testing.T) {
+// func splitThousand(i int) []int
+func TestSplitThousand(t *testing.T) {
 	tests := []struct {
 		name string
 		i    int
 		want []int
 	}{
 		{name: "i==0", i: 0, want: []int{0}},
-		{name: "i>0(1001)", i: 1001, want: []int{1, 1}},
+		{name: "i==(12 000 123 002)", i: 12000123002, want: []int{12, 0, 123, 2}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			res := hundredBlocks(tt.i)
+			res := splitThousand(tt.i)
 
 			if !reflect.DeepEqual(res, tt.want) {
-				t.Errorf("%s: hundredBlocks(%d) = %v, want %v", tt.name, tt.i, res, tt.want)
+				t.Errorf("%s: splitHundred(%d) = %v, want %v", tt.name, tt.i, res, tt.want)
 			}
 		})
 	}
 }
 
-// func numBlocks(arr []int) [][]num {
-func TestNumBlocks(t *testing.T) {
+// func splitHundred(i int) []int
+func TestSplitHundred(t *testing.T) {
 	tests := []struct {
 		name string
-		arr  []int
-		want [][]num
+		i    int
+		want []int
 	}{
-		{name: "emptyArr", arr: []int{}, want: [][]num{}},
-		{name: "zero", arr: []int{0}, want: [][]num{{{0, 0, 0}}}},
-		{name: "1 000 020 001", arr: []int{1, 20, 0, 1}, want: [][]num{
-			{{1, 0, 3}},
-			{{0, 0, 2}},
-			{{0, 0, 2}},
-			{{2, 2, 1}},
-			{{1, 0, 0}},
-		}},
-		// [[{12 1 3}] [{0 0 2}] [{0 0 2}] [{2 2 1} {4 0 1}] [{5 3 0} {18 1 0}]]
-		{name: "12 000 024 518", arr: []int{518, 24, 0, 12}, want: [][]num{
-			{{12, 1, 3}},
-			{{0, 0, 2}},
-			{{0, 0, 2}},
-			{{2, 2, 1}, {4, 0, 1}},
-			{{5, 3, 0}, {18, 1, 0}},
-		}},
+		{name: "i==0", i: 0, want: []int{0, 0, 0}},
+		{name: "i>0(121)", i: 121, want: []int{1, 2, 1}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			res := numBlocks(tt.arr)
+			res := splitHundred(tt.i)
 
 			if !reflect.DeepEqual(res, tt.want) {
-				t.Errorf("%s: numBlocks(%v) = %v, want %v", tt.name, tt.arr, res, tt.want)
+				t.Errorf("%s: splitHundred(%d) = %v want %v", tt.name, tt.i, res, tt.want)
 			}
 		})
 	}
 }
 
-// func sprintNum(nums [][]num, m map[int]map[int]string) [][]string {
-func TestSprintArrNum(t *testing.T) {
+// func constructNum(i int) (*Num, error)
+func TestConstructNum(t *testing.T) {
+	tests := []struct {
+		name string
+		i    int
+		want *Num
+	}{
+		{name: "i<0", i: -1, want: &Num{positive: false, val: [][]int{{0, 0, 1}}}},
+		{name: "i=210 102", i: 210102,
+			want: &Num{
+				positive: true,
+				val: [][]int{
+					{2, 0, 10},
+					{1, 0, 2},
+				},
+			}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 
-	initNumbers()
+			res := constructNum(tt.i)
+
+			if !reflect.DeepEqual(res, tt.want) {
+				t.Errorf("%s: splitNumber(%d) = %v, want %v", tt.name, tt.i, res, tt.want)
+			}
+		})
+	}
+}
+
+// func numToArrText(num *Num, m map[int]map[int]string) [][]string {
+func TestNumToArrText(t *testing.T) {
+
+	numbers := initNumberMapper()
 
 	tests := []struct {
 		name string
-		arr  [][]num
+		num  *Num
 		want [][]string
 	}{
-		// {name: "emptyArr", arr: [][]num{}, want: [][]string{}},
-		{name: "zero", arr: [][]num{{{0, 0, 0}}}, want: [][]string{{"ноль"}}},
-		{name: "1 000 020 001", arr: [][]num{
-			{{1, 0, 3}},
-			{{0, 0, 2}},
-			{{0, 0, 2}},
-			{{2, 2, 1}},
-			{{1, 0, 0}},
-		},
+		{name: "zero", num: &Num{positive: true, val: [][]int{{0, 0, 0}}}, want: [][]string{{"ноль"}}},
+
+		{name: "minus", num: &Num{positive: false, val: [][]int{{1, 2, 2}}},
+			want: [][]string{{"минус"}, {"сто", "двадцать", "два"}}},
+
+		{name: "1000", num: &Num{positive: true, val: [][]int{{0, 0, 1}, {0, 0, 0}}},
 			want: [][]string{
-				{"один", "миллиард"}, {"двадцать", "тысяч"}, {"один"},
-			},
-		},
-		{name: "1100", arr: [][]num{
-			{{1, 0, 1}},
-			{{1, 3, 0}},
-		},
+				{"одна", "тысяча"}}},
+
+		{name: "1 000 020 001", num: &Num{
+			positive: true,
+			val: [][]int{
+				{0, 0, 1},
+				{0, 0, 0},
+				{0, 2, 0},
+				{0, 0, 1}}},
 			want: [][]string{
-				{"одна", "тысяча"},
-				{"сто"},
-			},
-		},
+				{"один", "миллиард"}, {"двадцать", "тысяч"}, {"один"}}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			res := sprintArrNum(tt.arr, numbers)
+			res := numToArrText(tt.num, numbers)
 
 			if !reflect.DeepEqual(res, tt.want) {
-				t.Errorf("%s: numBlocks(%v) = %v, want %v", tt.name, tt.arr, res, tt.want)
+				t.Errorf("%s: numToArrText(%v) = %v, want %v", tt.name, tt.num, res, tt.want)
 			}
 		})
 	}

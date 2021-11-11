@@ -3,32 +3,47 @@ package main
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 )
 
+const minus = "минус"
+
 var errArgsNum = errors.New("not correct number of args")
-var errExeedsPermitedValue = errors.New("number exeeds permited value")
+var errNotPermitedValue = errors.New("not permited value")
 
 func main() {
 
+	i, err := readArgs(os.Args)
+	if err != nil {
+		fmt.Println(err)
+		usage(os.Args[0])
+		os.Exit(1)
+	}
+
 	numbers := initNumberMapper()
 
-	i := 3211810111
+	text := NumToText(i, numbers)
 
-	arr := splitNumber(i)
+	fmt.Println(text)
+}
+
+func NumToText(i int, numbers map[int]map[int]string) string {
+
+	arr := constructNum(i)
 	fmt.Println(arr)
 
-	strarr := sprintArrNum(arr, numbers)
-
+	strarr := numToArrText(arr, numbers)
 	fmt.Println(strarr)
 
-	s := blocksToString(strarr)
-	fmt.Println(s)
+	s := numArrTextToText(strarr)
+	return s
 }
 
 // takes num and returns blocks of ints by category: thousands,mlns,billns
 func splitThousand(i int) []int {
+
 	arr := make([]int, 0)
 
 	if i == 0 {
@@ -66,77 +81,69 @@ func splitHundred(i int) []int {
 	}
 
 	arr = append(arr, ten)
-
 	arr = append(arr, i)
 
 	return arr
 }
 
-func splitNumber(i int) [][]int {
-	arr := make([][]int, 0)
-
-	thousands := splitThousand(i)
-
-	for _, v := range thousands {
-		hundreds := splitHundred(v)
-		arr = append(arr, hundreds)
-	}
-
-	return arr
+// created only for +- sign
+type Num struct {
+	positive bool
+	val      [][]int
 }
 
-func sprintArrNum(nums [][]int, m map[int]map[int]string) [][]string {
+func constructNum(i int) *Num {
+	num := &Num{
+		positive: true,
+		val:      make([][]int, 0),
+	}
+
+	if i < 0 {
+		num.positive = false
+		i = -1 * i
+	}
+
+	thousands := splitThousand(i)
+	for _, v := range thousands {
+
+		hundreds := splitHundred(v)
+		num.val = append(num.val, hundreds)
+	}
+
+	return num
+}
+
+func numToArrText(num *Num, m map[int]map[int]string) [][]string {
 
 	arr := make([][]string, 0)
+	for i, rank := len(num.val)-1, 0; i >= 0; i, rank = i-1, rank+1 {
 
-	for i, rank := len(nums)-1, 0; i >= 0; i, rank = i-1, rank+1 {
-
-		numberBlock := make([]string, 0)
-
-		// all values are same after 4 for pos > 0 (10 11 20 40 100 ...thousands / hundreds ...)
-		appendingRank := 5
-		for j, pos := 2, 0; j >= 0; j, pos = j-1, pos+1 {
-
-			val := nums[i][j]
-
-			if val == 0 {
-				continue
-			}
-
-			if j == 2 && val <= 4 {
-				appendingRank = val
-			}
-
-			str := m[pos][val]
-			//  if thousand and it`s 1 || 2
-			if i == len(nums)-2 && pos == 0 && (val == 1 || val == 2) {
-				str = strings.Split(str, "|")[1]
-			}
-
-			// if not thousand nad it`s 1 || 2
-			if pos == 0 && (val == 1 || val == 2) {
-				str = strings.Split(str, "|")[0]
-			}
-
-			numberBlock = append([]string{str}, numberBlock...)
-
-		}
+		numberBlock := hundredToText(rank, num.val[i], m)
 		// skip if 000
 		if len(numberBlock) == 0 {
 			continue
 		}
 
 		// first block doesent have appending rank
-		if i == len(nums)-1 {
+		if rank == 0 {
 			arr = append([][]string{numberBlock}, arr...)
 			continue
 		}
 
+		// all values are same after 4 for pos > 0 (10 11 20 40 100 ...thousands / hundreds ...)
+		appendingRank := 5
+		lastNum := num.val[i][2]
+		if lastNum <= 4 && lastNum != 0 {
+			appendingRank = lastNum
+		}
+
 		//  append rank
 		numberBlock = append(numberBlock, m[rank+2][appendingRank])
-
 		arr = append([][]string{numberBlock}, arr...)
+	}
 
+	if !num.positive {
+		arr = append([][]string{{minus}}, arr...)
 	}
 
 	// handle zero
@@ -149,7 +156,33 @@ func sprintArrNum(nums [][]int, m map[int]map[int]string) [][]string {
 
 }
 
-func blocksToString(arr [][]string) string {
+func hundredToText(rank int, arr []int, m map[int]map[int]string) []string {
+
+	block := make([]string, 0)
+	for j, pos := 2, 0; j >= 0; j, pos = j-1, pos+1 {
+
+		val := arr[j]
+		if val == 0 {
+			continue
+		}
+
+		str := m[pos][val]
+		//  if thousand and it`s 1 || 2
+		if rank == 1 && pos == 0 && (val == 1 || val == 2) {
+			str = strings.Split(str, "|")[1]
+		}
+
+		// if not thousand nad it`s 1 || 2
+		if rank != 1 && pos == 0 && (val == 1 || val == 2) {
+			str = strings.Split(str, "|")[0]
+		}
+
+		block = append([]string{str}, block...)
+	}
+	return block
+}
+
+func numArrTextToText(arr [][]string) string {
 	var sb strings.Builder
 	sep := " "
 	for i, v := range arr {
@@ -196,7 +229,7 @@ func initNumberMapper() map[int]map[int]string {
 		8:  "восемь",
 		9:  "девять",
 		10: "десять",
-		11: "одинадцать",
+		11: "одиннадцать",
 		12: "двенадцать",
 		13: "тринадцать",
 		14: "четырнадцать",
