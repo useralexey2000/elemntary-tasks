@@ -31,7 +31,6 @@ func TestCountString(t *testing.T) {
 	}{
 		{name: "countFromString", reader: strings.NewReader(textToProcess), s: "random", count: 3, err: nil},
 		{name: "countFromStringErr", reader: &errReader{*bytes.NewBufferString(textToProcess)}, s: "random", count: 0, err: ErrRead},
-		// {name: "countFromFile", reader: file, s: "random", count: 3, err: nil},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -52,8 +51,8 @@ func (*eerrWriter) Write([]byte) (int, error) {
 	return 0, ErrWrite
 }
 
-type initReadWriter func() io.ReadWriter
-
+// reading result to buffer and initializing new buf for
+// every test case with anon func
 func TestReplaceString(t *testing.T) {
 	// buffer to write result to
 	var buf *bytes.Buffer
