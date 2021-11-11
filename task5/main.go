@@ -9,9 +9,9 @@ import (
 )
 
 const minus = "минус"
+const sep = " "
 
 var errArgsNum = errors.New("not correct number of args")
-var errNotPermitedValue = errors.New("not permited value")
 
 func main() {
 
@@ -22,26 +22,58 @@ func main() {
 		os.Exit(1)
 	}
 
-	numbers := initNumberMapper()
+	mapper := initNumberMapper()
 
-	text := NumToText(i, numbers)
+	text := NumToText(i, mapper)
 
 	fmt.Println(text)
 }
 
-func NumToText(i int, numbers map[int]map[int]string) string {
+func NumToText(i int, mapper *NumMapper) string {
 
 	arr := constructNum(i)
-	fmt.Println(arr)
+	// fmt.Println(arr)
 
-	strarr := numToArrText(arr, numbers)
-	fmt.Println(strarr)
+	strarr := numToArrText(arr, mapper)
+	// fmt.Println(strarr)
 
 	s := numArrTextToText(strarr)
 	return s
 }
 
+type Num struct {
+	positive bool
+	block    []*NumBlock
+}
+
+// constructs blocks of numbers by rank
+// true [[0,0,1], [0,0,0], [1,0,18]] = 1 000 118
+func constructNum(i int) *Num {
+	positive := true
+	if i < 0 {
+		positive = false
+		i = -1 * i
+	}
+
+	thousands := splitThousand(i)
+
+	num := &Num{
+		positive: positive,
+		block:    make([]*NumBlock, 0),
+	}
+	rank := len(thousands) - 1
+	for _, v := range thousands {
+
+		block := splitHundred(rank, v)
+		num.block = append(num.block, block)
+		rank--
+	}
+
+	return num
+}
+
 // takes num and returns blocks of ints by category: thousands,mlns,billns
+// [1, 0, 124] = 1 000 124
 func splitThousand(i int) []int {
 
 	arr := make([]int, 0)
@@ -57,14 +89,19 @@ func splitThousand(i int) []int {
 		arr = append([]int{block}, arr...)
 		i = next
 	}
-
+	fmt.Println(arr)
 	return arr
 }
 
-// takes num and returns splited hundred by category: ones, tens, hundreds
-func splitHundred(i int) []int {
+type NumBlock struct {
+	rank int
+	val  [3]int
+}
 
-	arr := make([]int, 0)
+// takes num  & rank and returns splited hundred by category: ones, tens, hundreds
+// [3, 0, 18] = 318
+// [1, 2, 4] = 124
+func splitHundred(rank, i int) *NumBlock {
 
 	var hundred int
 	if i > 99 {
@@ -72,119 +109,93 @@ func splitHundred(i int) []int {
 		i = i % 100
 	}
 
-	arr = append(arr, hundred)
-
 	var ten int
 	if i > 19 {
 		ten = i / 10
 		i = i % 10
 	}
 
-	arr = append(arr, ten)
-	arr = append(arr, i)
+	one := i
 
-	return arr
+	return &NumBlock{
+		rank: rank,
+		val:  [3]int{hundred, ten, one},
+	}
 }
 
-// created only for +- sign
-type Num struct {
-	positive bool
-	val      [][]int
-}
-
-func constructNum(i int) *Num {
-	num := &Num{
-		positive: true,
-		val:      make([][]int, 0),
-	}
-
-	if i < 0 {
-		num.positive = false
-		i = -1 * i
-	}
-
-	thousands := splitThousand(i)
-	for _, v := range thousands {
-
-		hundreds := splitHundred(v)
-		num.val = append(num.val, hundreds)
-	}
-
-	return num
-}
-
-func numToArrText(num *Num, m map[int]map[int]string) [][]string {
+// takes num and returns array text number
+func numToArrText(num *Num, mapper *NumMapper) [][]string {
 
 	arr := make([][]string, 0)
-	for i, rank := len(num.val)-1, 0; i >= 0; i, rank = i-1, rank+1 {
 
-		numberBlock := hundredToText(rank, num.val[i], m)
-		// skip if 000
-		if len(numberBlock) == 0 {
-			continue
+	for _, block := range num.block {
+
+		textBlock := numBlockToArrText(block, mapper)
+
+		if textBlock != nil {
+			arr = append(arr, textBlock)
 		}
 
-		// first block doesent have appending rank
-		if rank == 0 {
-			arr = append([][]string{numberBlock}, arr...)
-			continue
-		}
+	}
 
-		// all values are same after 4 for pos > 0 (10 11 20 40 100 ...thousands / hundreds ...)
-		appendingRank := 5
-		lastNum := num.val[i][2]
-		if lastNum <= 4 && lastNum != 0 {
-			appendingRank = lastNum
-		}
-
-		//  append rank
-		numberBlock = append(numberBlock, m[rank+2][appendingRank])
-		arr = append([][]string{numberBlock}, arr...)
+	if len(arr) == 0 {
+		arr = append(arr, []string{mapper.number[0][0]})
+		return arr
 	}
 
 	if !num.positive {
 		arr = append([][]string{{minus}}, arr...)
 	}
 
-	// handle zero
-	if len(arr) == 0 {
-		arr = append(arr, []string{m[0][0]})
-		return arr
-	}
-
 	return arr
-
 }
 
-func hundredToText(rank int, arr []int, m map[int]map[int]string) []string {
+//  if thousand pos 0 and it`s 1 || 2 treats differently
+func numBlockToArrText(block *NumBlock, mapper *NumMapper) []string {
 
-	block := make([]string, 0)
-	for j, pos := 2, 0; j >= 0; j, pos = j-1, pos+1 {
+	textBlock := make([]string, 0)
 
-		val := arr[j]
+	pos := 2
+	for _, val := range block.val {
+
 		if val == 0 {
+			pos--
 			continue
 		}
 
-		str := m[pos][val]
-		//  if thousand and it`s 1 || 2
-		if rank == 1 && pos == 0 && (val == 1 || val == 2) {
+		str := mapper.number[pos][val]
+		if block.rank == 1 && pos == 0 && (val == 1 || val == 2) {
 			str = strings.Split(str, "|")[1]
 		}
 
-		// if not thousand nad it`s 1 || 2
-		if rank != 1 && pos == 0 && (val == 1 || val == 2) {
+		if block.rank != 1 && pos == 0 && (val == 1 || val == 2) {
 			str = strings.Split(str, "|")[0]
 		}
 
-		block = append([]string{str}, block...)
+		textBlock = append(textBlock, str)
+		pos--
 	}
-	return block
+	if len(textBlock) == 0 {
+		return nil
+	}
+
+	if block.rank == 0 {
+		return textBlock
+	}
+
+	rankVal := 5
+	lastNum := block.val[2]
+	if lastNum <= 4 && lastNum != 0 {
+		rankVal = lastNum
+	}
+
+	textBlock = append(textBlock, mapper.rank[block.rank][rankVal])
+
+	return textBlock
 }
 
 func numArrTextToText(arr [][]string) string {
 	var sb strings.Builder
-	sep := " "
 	for i, v := range arr {
 		s := strings.Join(v, sep)
 		if i == len(arr)-1 {
@@ -215,7 +226,12 @@ func usage(n string) {
 	fmt.Printf("usage: %v number<int>\n", n)
 }
 
-func initNumberMapper() map[int]map[int]string {
+type NumMapper struct {
+	number map[int]map[int]string
+	rank   map[int]map[int]string
+}
+
+func initNumberMapper() *NumMapper {
 
 	ones := map[int]string{
 		0:  "ноль",
@@ -291,10 +307,16 @@ func initNumberMapper() map[int]map[int]string {
 		0: ones,
 		1: tens,
 		2: hundreds,
-		3: thousands,
-		4: millions,
-		5: billions,
+	}
+	ranks := map[int]map[int]string{
+		1: thousands,
+		2: millions,
+		3: billions,
+	}
+	mapper := &NumMapper{
+		number: numbers,
+		rank:   ranks,
 	}
 
-	return numbers
+	return mapper
 }

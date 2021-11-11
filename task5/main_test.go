@@ -53,23 +53,24 @@ func TestSplitThousand(t *testing.T) {
 	}
 }
 
-// func splitHundred(i int) []int
+// func splitHundred(rank, i int) *NumBlock {
 func TestSplitHundred(t *testing.T) {
 	tests := []struct {
 		name string
+		rank int
 		i    int
-		want []int
+		want *NumBlock
 	}{
-		{name: "i==0", i: 0, want: []int{0, 0, 0}},
-		{name: "i>0(121)", i: 121, want: []int{1, 2, 1}},
+		{name: "i==0", rank: 0, i: 0, want: &NumBlock{rank: 0, val: [3]int{0, 0, 0}}},
+		{name: "i>0(121)", rank: 0, i: 121, want: &NumBlock{rank: 0, val: [3]int{1, 2, 1}}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			res := splitHundred(tt.i)
+			res := splitHundred(tt.rank, tt.i)
 
 			if !reflect.DeepEqual(res, tt.want) {
-				t.Errorf("%s: splitHundred(%d) = %v want %v", tt.name, tt.i, res, tt.want)
+				t.Errorf("%s: splitHundred(%d, %d) = %v want %v", tt.name, tt.rank, tt.i, res, tt.want)
 			}
 		})
 	}
@@ -82,15 +83,16 @@ func TestConstructNum(t *testing.T) {
 		i    int
 		want *Num
 	}{
-		{name: "i<0", i: -1, want: &Num{positive: false, val: [][]int{{0, 0, 1}}}},
-		{name: "i=210 102", i: 210102,
-			want: &Num{
-				positive: true,
-				val: [][]int{
-					{2, 0, 10},
-					{1, 0, 2},
-				},
-			}},
+		{name: "i=-1", i: -1,
+			want: &Num{positive: false, block: []*NumBlock{{rank: 0, val: [3]int{0, 0, 1}}}},
+		},
+		{name: "i=124001", i: 124001,
+			want: &Num{positive: true,
+				block: []*NumBlock{
+					{rank: 1, val: [3]int{1, 2, 4}},
+					{rank: 0, val: [3]int{0, 0, 1}},
+				}},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -98,48 +100,35 @@ func TestConstructNum(t *testing.T) {
 			res := constructNum(tt.i)
 
 			if !reflect.DeepEqual(res, tt.want) {
-				t.Errorf("%s: splitNumber(%d) = %v, want %v", tt.name, tt.i, res, tt.want)
+				t.Errorf("%s: constructNumber(%d) = %v, want %v", tt.name, tt.i, res, tt.want)
 			}
 		})
 	}
 }
 
-// func numToArrText(num *Num, m map[int]map[int]string) [][]string {
-func TestNumToArrText(t *testing.T) {
-
-	numbers := initNumberMapper()
-
+// func NumToText(i int, mapper *NumMapper) string
+func TestNumToText(t *testing.T) {
+	mapper := initNumberMapper()
 	tests := []struct {
 		name string
-		num  *Num
-		want [][]string
+		i    int
+		want string
 	}{
-		{name: "zero", num: &Num{positive: true, val: [][]int{{0, 0, 0}}}, want: [][]string{{"ноль"}}},
-
-		{name: "minus", num: &Num{positive: false, val: [][]int{{1, 2, 2}}},
-			want: [][]string{{"минус"}, {"сто", "двадцать", "два"}}},
-
-		{name: "1000", num: &Num{positive: true, val: [][]int{{0, 0, 1}, {0, 0, 0}}},
-			want: [][]string{
-				{"одна", "тысяча"}}},
-
-		{name: "1 000 020 001", num: &Num{
-			positive: true,
-			val: [][]int{
-				{0, 0, 1},
-				{0, 0, 0},
-				{0, 2, 0},
-				{0, 0, 1}}},
-			want: [][]string{
-				{"один", "миллиард"}, {"двадцать", "тысяч"}, {"один"}}},
+		{name: "i=0", i: 0, want: "ноль"},
+		{name: "i=1 000", i: 1000, want: "одна тысяча"},
+		{name: "i=1 001", i: 1001, want: "одна тысяча один"},
+		{name: "i=1 000 102 418", i: 1000102418,
+			want: "один миллиард сто две тысячи четыреста восемнадцать"},
+		{name: "i=-1 000 002 000", i: -1000005002,
+			want: "минус один миллиард пять тысяч два"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			res := numToArrText(tt.num, numbers)
+			res := NumToText(tt.i, mapper)
 
-			if !reflect.DeepEqual(res, tt.want) {
-				t.Errorf("%s: numToArrText(%v) = %v, want %v", tt.name, tt.num, res, tt.want)
+			if res != tt.want {
+				t.Errorf("%s: NumToText(%d, mapper) = %v want %v", tt.name, tt.i, res, tt.want)
 			}
 		})
 	}
