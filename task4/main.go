@@ -30,7 +30,7 @@ func main() {
 			fmt.Println(err)
 		}
 		fmt.Println("Number of matches is: ", i)
-		os.Exit(0)
+		os.Exit(1)
 
 	}
 	if len(args) == 4 {
@@ -38,7 +38,7 @@ func main() {
 		if err := ReplaceString(&MyFile{f: f}, args[2], args[3]); err != nil {
 			fmt.Println(err)
 		}
-		os.Exit(0)
+		os.Exit(1)
 	}
 }
 
@@ -57,7 +57,7 @@ type MyFile struct {
 	f *os.File
 }
 
-// overwrite write method for os.file to overwrite file and compy with io.ReadWriter
+// overwrite write method for os.file to overwrite file and comply with io.ReadWriter
 // no need to test them as they are direct calls to methods in standard library
 func (ff *MyFile) Write(b []byte) (int, error) {
 	return ff.f.WriteAt(b, 0)
