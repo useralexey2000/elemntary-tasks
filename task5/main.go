@@ -129,22 +129,9 @@ func numToArrText(num *Num, mapper *NumMapper) [][]string {
 			rank--
 			continue
 		}
-
-		if rank == 0 {
-			arr = append(arr, textBlock)
-			rank--
-			continue
-		}
-
-		rankVal := 5
-		lastNum := block[2]
-		if lastNum <= 4 && lastNum != 0 {
-			rankVal = lastNum
-		}
-
-		textBlock = append(textBlock, mapper.rank[rank][rankVal])
 		arr = append(arr, textBlock)
 		rank--
+
 	}
 
 	if len(arr) == 0 {
@@ -184,6 +171,17 @@ func numBlockToText(rank int, block [3]int, mapper *NumMapper) []string {
 		arr = append(arr, str)
 		pos--
 	}
+
+	if rank == 0 || len(arr) == 0 {
+		return arr
+	}
+
+	rankVal := 5
+	lastNum := block[2]
+	if lastNum <= 4 && lastNum != 0 {
+		rankVal = lastNum
+	}
+	arr = append(arr, mapper.rank[rank][rankVal])
 
 	return arr
 }
