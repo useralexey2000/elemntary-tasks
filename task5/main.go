@@ -8,6 +8,11 @@ import (
 	"strings"
 )
 
+// 9 223 372 036 854 775 807
+const maxNum = 1<<63 - 1
+
+// -9 223 372 036 854 775 808
+const minNum = -1<<63 + 1
 const minus = "минус"
 const sep = " "
 
@@ -205,7 +210,7 @@ func readArgs(args []string) (int, error) {
 	}
 
 	num, err := strconv.Atoi(args[1])
-	if err != nil {
+	if err != nil || num < minNum {
 		return 0, fmt.Errorf("cant read arg num %w", err)
 	}
 
@@ -213,7 +218,7 @@ func readArgs(args []string) (int, error) {
 }
 
 func usage(n string) {
-	fmt.Printf("usage: %v number<int>\n", n)
+	fmt.Printf("usage: %v number <range - %d <int> to + %d<int>>\n", n, minNum, maxNum)
 }
 
 type NumMapper struct {
@@ -293,6 +298,30 @@ func initNumberMapper() *NumMapper {
 		5: "миллиардов",
 	}
 
+	trillions := map[int]string{
+		1: "триллион",
+		2: "триллиона",
+		3: "триллиона",
+		4: "триллиона",
+		5: "триллионов",
+	}
+
+	quadrillions := map[int]string{
+		1: "квадриллион",
+		2: "квадриллиона",
+		3: "квадриллиона",
+		4: "квадриллиона",
+		5: "квадриллионов",
+	}
+
+	quintillions := map[int]string{
+		1: "квинтиллион",
+		2: "квинтиллиона",
+		3: "квинтиллиона",
+		4: "квинтиллиона",
+		5: "квинтиллионов",
+	}
+
 	numbers := map[int]map[int]string{
 		0: ones,
 		1: tens,
@@ -302,6 +331,9 @@ func initNumberMapper() *NumMapper {
 		1: thousands,
 		2: millions,
 		3: billions,
+		4: trillions,
+		5: quadrillions,
+		6: quintillions,
 	}
 	mapper := &NumMapper{
 		number: numbers,
