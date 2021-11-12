@@ -18,9 +18,15 @@ func main() {
 	}
 	// can be separated for reading and writing depending on method called
 	f, err := os.OpenFile(args[1], os.O_RDWR, 066)
+	defer func() {
+		if f != nil {
+			f.Close()
+		}
+		usage(args[0])
+	}()
 	if err != nil {
 		fmt.Printf("cant open file %s, %v\n", args[1], err)
-		os.Exit(1)
+		return
 	}
 
 	if len(args) == 3 {
@@ -28,17 +34,17 @@ func main() {
 		i, err := CountString(f, args[2])
 		if err != nil {
 			fmt.Println(err)
+			return
 		}
 		fmt.Println("Number of matches is: ", i)
-		os.Exit(1)
-
+		return
 	}
 	if len(args) == 4 {
 
 		if err := ReplaceString(&MyFile{f: f}, args[2], args[3]); err != nil {
 			fmt.Println(err)
+			return
 		}
-		os.Exit(1)
 	}
 }
 
