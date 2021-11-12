@@ -11,7 +11,7 @@ import (
 // 9 223 372 036 854 775 807
 const maxNum = 1<<63 - 1
 
-// -9 223 372 036 854 775 808
+// -9 223 372 036 854 775 808 +1
 const minNum = -1<<63 + 1
 const minus = "минус"
 const sep = " "
@@ -64,12 +64,11 @@ func constructNum(i int) *Num {
 		positive: positive,
 		block:    make([][3]int, 0),
 	}
-	rank := len(thousands) - 1
+
 	for _, v := range thousands {
 
-		block := splitHundred(rank, v)
+		block := splitHundred(v)
 		num.block = append(num.block, block)
-		rank--
 	}
 
 	return num
@@ -99,7 +98,7 @@ func splitThousand(i int) []int {
 // takes num  & rank and returns splited hundred by category: ones, tens, hundreds
 // [3, 0, 18] = 318
 // [1, 2, 4] = 124
-func splitHundred(rank, i int) [3]int {
+func splitHundred(i int) [3]int {
 
 	var hundred int
 	if i > 99 {
