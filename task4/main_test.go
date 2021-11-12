@@ -10,15 +10,15 @@ import (
 
 const textToProcess = "random, random, something random"
 
-var ErrRead = errors.New("read err")
-var ErrWrite = errors.New("write err")
+var errRead = errors.New("read err")
+var errWrite = errors.New("write err")
 
 type errReader struct {
 	bytes.Buffer
 }
 
 func (*errReader) Read([]byte) (int, error) {
-	return 0, ErrRead
+	return 0, errRead
 }
 
 func TestCountString(t *testing.T) {
@@ -30,7 +30,7 @@ func TestCountString(t *testing.T) {
 		err    error
 	}{
 		{name: "countFromString", reader: strings.NewReader(textToProcess), s: "random", count: 3, err: nil},
-		{name: "countFromStringErr", reader: &errReader{*bytes.NewBufferString(textToProcess)}, s: "random", count: 0, err: ErrRead},
+		{name: "countFromStringErr", reader: &errReader{*bytes.NewBufferString(textToProcess)}, s: "random", count: 0, err: errRead},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -48,7 +48,7 @@ type eerrWriter struct {
 }
 
 func (*eerrWriter) Write([]byte) (int, error) {
-	return 0, ErrWrite
+	return 0, errWrite
 }
 
 // reading result to buffer and initializing new buf for
@@ -73,12 +73,12 @@ func TestReplaceString(t *testing.T) {
 		{name: "Errreader", rw: func() io.ReadWriter {
 			buf = bytes.NewBufferString(textToProcess)
 			return &errReader{*buf}
-		}, s1: "random", s2: "concrete", want: "random, random, something random", err: ErrRead},
+		}, s1: "random", s2: "concrete", want: "random, random, something random", err: errRead},
 
 		{name: "ErrWriter", rw: func() io.ReadWriter {
 			buf = bytes.NewBufferString(textToProcess)
 			return &eerrWriter{*buf}
-		}, s1: "random", s2: "concrete", want: "random, random, something random", err: ErrWrite},
+		}, s1: "random", s2: "concrete", want: "random, random, something random", err: errWrite},
 	}
 	for _, tt := range tests {
 
