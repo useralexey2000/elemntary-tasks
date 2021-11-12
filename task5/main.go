@@ -43,11 +43,9 @@ func NumToText(i int, mapper *NumMapper) string {
 
 type Num struct {
 	positive bool
-	block    []*NumBlock
+	block    [][3]int
 }
 
-// constructs blocks of numbers by rank
-// true [[0,0,1], [0,0,0], [1,0,18]] = 1 000 118
 func constructNum(i int) *Num {
 	positive := true
 	if i < 0 {
@@ -59,7 +57,7 @@ func constructNum(i int) *Num {
 
 	num := &Num{
 		positive: positive,
-		block:    make([]*NumBlock, 0),
+		block:    make([][3]int, 0),
 	}
 	rank := len(thousands) - 1
 	for _, v := range thousands {
@@ -89,19 +87,14 @@ func splitThousand(i int) []int {
 		arr = append([]int{block}, arr...)
 		i = next
 	}
-	fmt.Println(arr)
+	// fmt.Println(arr)
 	return arr
-}
-
-type NumBlock struct {
-	rank int
-	val  [3]int
 }
 
 // takes num  & rank and returns splited hundred by category: ones, tens, hundreds
 // [3, 0, 18] = 318
 // [1, 2, 4] = 124
-func splitHundred(rank, i int) *NumBlock {
+func splitHundred(rank, i int) [3]int {
 
 	var hundred int
 	if i > 99 {
@@ -117,25 +110,37 @@ func splitHundred(rank, i int) *NumBlock {
 
 	one := i
 
-	return &NumBlock{
-		rank: rank,
-		val:  [3]int{hundred, ten, one},
-	}
+	return [3]int{hundred, ten, one}
 }
 
-// takes num and returns array text number
 func numToArrText(num *Num, mapper *NumMapper) [][]string {
 
 	arr := make([][]string, 0)
-
+	rank := len(num.block) - 1
 	for _, block := range num.block {
 
-		textBlock := numBlockToArrText(block, mapper)
+		textBlock := numBlockToText(rank, block, mapper)
 
-		if textBlock != nil {
-			arr = append(arr, textBlock)
+		if len(textBlock) == 0 {
+			rank--
+			continue
 		}
 
+		if rank == 0 {
+			arr = append(arr, textBlock)
+			rank--
+			continue
+		}
+
+		rankVal := 5
+		lastNum := block[2]
+		if lastNum <= 4 && lastNum != 0 {
+			rankVal = lastNum
+		}
+
+		textBlock = append(textBlock, mapper.rank[rank][rankVal])
+		arr = append(arr, textBlock)
+		rank--
 	}
 
 	if len(arr) == 0 {
@@ -150,13 +155,13 @@ func numToArrText(num *Num, mapper *NumMapper) [][]string {
 	return arr
 }
 
-//  if thousand pos 0 and it`s 1 || 2 treats differently
-func numBlockToArrText(block *NumBlock, mapper *NumMapper) []string {
+//  if thousand and it`s 1 || 2 treat differently
+func numBlockToText(rank int, block [3]int, mapper *NumMapper) []string {
 
-	textBlock := make([]string, 0)
+	arr := make([]string, 0)
 
 	pos := 2
-	for _, val := range block.val {
+	for _, val := range block {
 
 		if val == 0 {
 			pos--
@@ -164,34 +169,19 @@ func numBlockToArrText(block *NumBlock, mapper *NumMapper) []string {
 		}
 
 		str := mapper.number[pos][val]
-		if block.rank == 1 && pos == 0 && (val == 1 || val == 2) {
+		if rank == 1 && pos == 0 && (val == 1 || val == 2) {
 			str = strings.Split(str, "|")[1]
 		}
 
-		if block.rank != 1 && pos == 0 && (val == 1 || val == 2) {
+		if rank != 1 && pos == 0 && (val == 1 || val == 2) {
 			str = strings.Split(str, "|")[0]
 		}
 
-		textBlock = append(textBlock, str)
+		arr = append(arr, str)
 		pos--
 	}
-	if len(textBlock) == 0 {
-		return nil
-	}
 
-	if block.rank == 0 {
-		return textBlock
-	}
-
-	rankVal := 5
-	lastNum := block.val[2]
-	if lastNum <= 4 && lastNum != 0 {
-		rankVal = lastNum
-	}
-
-	textBlock = append(textBlock, mapper.rank[block.rank][rankVal])
-
-	return textBlock
+	return arr
 }
 
 func numArrTextToText(arr [][]string) string {
